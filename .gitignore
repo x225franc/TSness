@@ -1,0 +1,18 @@
+# backend
+backend/node_modules/
+backend/package-lock.json
+backend/dist/
+backend/logs/
+backend/.env
+
+# frontend 
+frontend/node_modules/
+frontend/package-lock.json
+frontend/dist/
+frontend/build/
+
+# common files
+.vscode
+node_modules/
+package-lock.json
+
