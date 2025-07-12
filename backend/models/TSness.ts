@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // --- USER ---
 const ChallengeCreatedSchema = new mongoose.Schema({
@@ -123,13 +123,11 @@ const LeaderboardSchema = new mongoose.Schema({
     updatedAt: Date
 }, { collection: 'leaderboards' });
 
-module.exports = {
-    User: mongoose.model('User', UserSchema),
-    Gym: mongoose.model('Gym', GymSchema),
-    ExerciseType: mongoose.model('ExerciseType', ExerciseTypeSchema),
-    Challenge: mongoose.model('Challenge', ChallengeSchema),
-    Badge: mongoose.model('Badge', BadgeCollectionSchema),
-    Reward: mongoose.model('Reward', RewardSchema),
-    Notification: mongoose.model('Notification', NotificationSchema),
-    Leaderboard: mongoose.model('Leaderboard', LeaderboardSchema)
-};
+export const User = mongoose.model('User', UserSchema);
+// export const Gym = mongoose.model('Gym', GymSchema);
+export const ExerciseType = mongoose.model('ExerciseType', ExerciseTypeSchema);
+export const Challenge = mongoose.model('Challenge', ChallengeSchema);
+export const Badge = mongoose.model('Badge', BadgeCollectionSchema);
+export const Reward = mongoose.model('Reward', RewardSchema);
+export const Notification = mongoose.model('Notification', NotificationSchema);
+export const Leaderboard = mongoose.model('Leaderboard', LeaderboardSchema);
