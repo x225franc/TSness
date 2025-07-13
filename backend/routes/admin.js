@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { User, Gym, Challenge, Notification, Leaderboard } from '../models/TSness.js';
+
 const router = express.Router();
-const { User, Gym, Challenge, Notification, Leaderboard } = require('../models/TSness');
 
 // Récupérer tous les utilisateurs
 router.get('/users', async (req, res) => {
@@ -191,4 +192,4 @@ router.get('/users/:id/deletion-preview', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

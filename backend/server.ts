@@ -4,6 +4,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import gymsRouter from './routes/gyms';
+import usersRouter from './routes/users';
+import badgesRouter from './routes/badges';
+import challengesRouter from './routes/challenges';
 
 dotenv.config();
 
@@ -12,12 +15,12 @@ app.use(express.json());
 app.use(cors());
 
 // Routes
-app.use(gymsRouter);
-app.use('/api/user', require('./routes/user'));
-app.use('/api/exercisetypes', require('./routes/exercisetypes'));
-app.use('/api/badges', require('./routes/badges'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/challenges', require('./routes/challenges'));
+app.use('/api/user',usersRouter);
+app.use('/api/gyms', gymsRouter);
+// app.use('/api/exercisetypes', require('./routes/exercisetypes'));
+app.use('/api/badges',badgesRouter);
+// app.use('/api/admin', require('./routes/admin'));
+app.use('/api/challenges',challengesRouter);
 
 // MongoDB connection
 if (typeof process.env.MONGODB_URI === 'undefined') {
@@ -29,9 +32,9 @@ mongoose.connect(process.env.MONGODB_URI)
 .catch((err: Error) => console.error('MongoDB Erreur:', err));
 
 // route test
-// app.get('/', (req, res) => {
-//     res.send('Hello World !');
-// });
+app.get('/', (req, res) => {
+    res.send('Hello World !');
+});
 
 // lancement du serveur
 const PORT = process.env.PORT || 3000;

@@ -138,7 +138,7 @@ Application web de gestion de salles de sport avec un backend Node.js/Express, u
         description: String,
         type: String,
         difficulty: String,
-        duration: String
+        duration: String // A supprimer en BDD puis ici
       } ]
     - challenges_joined: [ {
         challengeId: ObjectId,
@@ -187,7 +187,7 @@ Application web de gestion de salles de sport avec un backend Node.js/Express, u
     - gymId: ObjectId
     - exerciseTypeId: ObjectId
     - difficulty: String ("facile" | "intermédiaire" | "difficile")
-    - duration: String
+    - duration: String // A supprimer en BDD puis ici
     - objectives: [String]
     - createdAt: Date
 

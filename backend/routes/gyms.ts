@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
         const gyms = await GymModel.find();
         res.json(gyms);
     } catch (err) {
-        res.status(400).json({ erreur: (err as Error).message });
+        res.status(500).json({ erreur: (err as Error).message });
     }
 });
 
