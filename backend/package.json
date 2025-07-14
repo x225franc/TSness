@@ -4,9 +4,7 @@
 	"private": true,
 	"type": "commonjs",
 	"scripts": {
-		"build": "tsc",
-		"start": "node dist/server.js",
-		"dev": "nodemon server.ts"
+		"start": "nodemon server.ts"
 	},
 	"dependencies": {
 		"bcrypt": "^6.0.0",
