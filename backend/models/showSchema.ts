@@ -1,10 +1,16 @@
-require('dotenv').config();
-const { MongoClient } = require('mongodb');
+import dotenv from 'dotenv';
+import { MongoClient } from 'mongodb';
 
-async function showCollectionsAndSamples() {
-    const uri = process.env.MONGODB_URI.trim();
+dotenv.config();
+
+async function showCollectionsAndSamples(): Promise<void> {
+    const uri = process.env.MONGODB_URI?.trim() || '';
+    if (!uri) {
+        throw new Error('MONGODB_URI is not defined in the environment variables.');
+    }
+
     const dbName = 'TSness';
-    const client = new MongoClient(uri, { useUnifiedTopology: true });
+    const client = new MongoClient(uri);
 
     try {
         await client.connect();

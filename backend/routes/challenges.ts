@@ -1,12 +1,6 @@
 import express from 'express';
-import mongoose from 'mongoose';
-import { ExerciseType } from '../models/TSness';
-import { challengeSchema, gymSchema } from '../services/mongoose/schema';
+import { GymModel, ChallengeModel, ExerciseTypeModel } from '../services/mongoose/services';
 import { ChallengeInput } from '../models';
-
-// Avoid overwriting the Gym model
-const GymModel = mongoose.models.Gym || mongoose.model('Gym', gymSchema());
-const ChallengeModel = mongoose.models.Challenge || mongoose.model('Challenge', challengeSchema());
 
 const router = express.Router();
 
@@ -56,13 +50,12 @@ router.post('/owner', async (req, res) => {
             difficulty,
             startDate,
             endDate,
-            objectives,
-            ownerId
+            objectives
         } = req.body;
+        const ownerId = req.query['owner_id'];
 
         if (
-            !title || !description || !gymIds || !Array.isArray(gymIds) || gymIds.length === 0 ||
-            !ownerId || !startDate || !endDate
+            !title || !description || !gymIds || !Array.isArray(gymIds) || gymIds.length === 0 || !startDate || !endDate
         ) {
             return res.status(400).json({ erreur: 'Champs obligatoires manquants' });
         }
@@ -108,91 +101,85 @@ router.post('/owner', async (req, res) => {
 
 
 // Récupérer le défi et vérifier les permissions
-router.put(
-    '/owner/:challengeId',
-    async (
-        req: express.Request<{ challengeId: string }, {}, ChallengeInput>,
-        res
-    ) => {
-        try {
-            const { challengeId } = req.params;
-            const {
-                title,
-                description,
-                gymIds,
-                exerciseTypeId,
-                difficulty,
-                startDate,
-                endDate,
-                objectives,
-                ownerId
-            } = req.body;
+router.put('/owner/:challengeId', async (req, res) => {
+    const { challengeId } = req.params;
+    const {
+        title,
+        description,
+        gymIds,
+        exerciseTypeId,
+        difficulty,
+        startDate,
+        endDate,
+        objectives,
+        ownerId // Should be retrieved from query params
+    } = req.body;
 
-            if (
-                !title || !description || !gymIds || !Array.isArray(gymIds) || gymIds.length === 0 ||
-                !ownerId || !startDate || !endDate
-            ) {
-                return res.status(400).json({ erreur: 'Champs obligatoires manquants' });
-            }
-
-            const challenge = await ChallengeModel.findById(challengeId).populate('gymIds');
-            if (!challenge) {
-                return res.status(404).json({ erreur: 'Défi non trouvé' });
-            }
-
-            const ownerGyms = await GymModel.find({ ownerId, _id: { $in: challenge.gymIds } });
-            if (ownerGyms.length !== challenge.gymIds.length) {
-                return res.status(403).json({ erreur: 'Vous n\'êtes pas autorisé à modifier ce défi' });
-            }
-
-            const newGyms = await GymModel.find({ _id: { $in: gymIds }, ownerId });
-            if (newGyms.length !== gymIds.length) {
-                return res.status(403).json({ erreur: 'Une ou plusieurs salles ne vous appartiennent pas' });
-            }
-
-            const unapprovedGyms = newGyms.filter(gym => !gym.isApproved);
-            if (unapprovedGyms.length > 0) {
-                return res.status(400).json({
-                    erreur: `Impossible d'associer des salles non approuvées: ${unapprovedGyms.map(g => g.name).join(', ')}`
-                });
-            }
-
-            const updateData: ChallengeInput = {
-                title,
-                description,
-                gymIds,
-                exerciseTypeId,
-                difficulty,
-                startDate: new Date(startDate).toISOString(),
-                endDate: new Date(endDate).toISOString(),
-                objectives: objectives || [],
-                ownerId
-            };
-
-            const updatedChallenge = await ChallengeModel.findByIdAndUpdate(
-                challengeId,
-                updateData,
-                { new: true }
-            )
-                .populate('gymIds', 'name')
-                .populate('exerciseTypeId', 'name description targetedMuscles');
-
-            if (!updatedChallenge) {
-                return res.status(404).json({ erreur: 'Défi non trouvé' });
-            }
-
-            res.json(updatedChallenge);
-        } catch (err) {
-            res.status(400).json({ erreur: (err as Error).message });
+    try {
+        if (
+            !title || !description || !gymIds || !Array.isArray(gymIds) || gymIds.length === 0 ||
+            !ownerId || !startDate || !endDate
+        ) {
+            return res.status(400).json({ erreur: 'Champs obligatoires manquants' });
         }
+
+        const challenge = await ChallengeModel.findById(challengeId).populate('gymIds');
+        if (!challenge) {
+            return res.status(404).json({ erreur: 'Défi non trouvé' });
+        }
+
+        const ownerGyms = await GymModel.find({ ownerId, _id: { $in: challenge.gymIds } });
+        if (ownerGyms.length !== challenge.gymIds.length) {
+            return res.status(403).json({ erreur: 'Vous n\'êtes pas autorisé à modifier ce défi' });
+        }
+
+        const newGyms = await GymModel.find({ _id: { $in: gymIds }, ownerId });
+        if (newGyms.length !== gymIds.length) {
+            return res.status(403).json({ erreur: 'Une ou plusieurs salles ne vous appartiennent pas' });
+        }
+
+        const unapprovedGyms = newGyms.filter(gym => !gym.isApproved);
+        if (unapprovedGyms.length > 0) {
+            return res.status(400).json({
+                erreur: `Impossible d'associer des salles non approuvées: ${unapprovedGyms.map(g => g.name).join(', ')}`
+            });
+        }
+
+        const updateData: ChallengeInput = {
+            title,
+            description,
+            gymIds,
+            exerciseTypeId,
+            difficulty,
+            startDate: new Date(startDate).toISOString(),
+            endDate: new Date(endDate).toISOString(),
+            objectives: objectives || [],
+            ownerId
+        };
+
+        const updatedChallenge = await ChallengeModel.findByIdAndUpdate(
+            challengeId,
+            updateData,
+            { new: true }
+        )
+            .populate('gymIds', 'name')
+            .populate('exerciseTypeId', 'name description targetedMuscles');
+
+        if (!updatedChallenge) {
+            return res.status(404).json({ erreur: 'Défi non trouvé' });
+        }
+
+        res.json(updatedChallenge);
+    } catch (err) {
+        res.status(400).json({ erreur: (err as Error).message });
     }
-);
+});
 
 // Supprimer un défi (uniquement par le propriétaire de la salle)
 router.delete('/owner/:challengeId', async (req, res) => {
     try {
         const { challengeId } = req.params;
-        const { ownerId } = req.body;
+        const ownerId = req.query['owner_id'];
 
         if (!ownerId) {
             return res.status(400).json({ erreur: 'ID du propriétaire requis' });
@@ -222,7 +209,7 @@ router.delete('/owner/:challengeId', async (req, res) => {
 // Récupérer les types d'exercices disponibles (pour le formulaire)
 router.get('/exercise-types', async (req, res) => {
     try {
-        const exerciseTypes = await ExerciseType.find({}, '_id name description targetedMuscles');
+        const exerciseTypes = await ExerciseTypeModel.find({}, '_id name description targetedMuscles');
         res.json(exerciseTypes);
     } catch (err) {
         res.status(400).json({ erreur: (err as Error).message });

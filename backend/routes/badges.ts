@@ -1,8 +1,6 @@
 import express from 'express';
-import mongoose from 'mongoose';
-import { badgeSchema } from '../services/mongoose/schema';
+import { BadgeModel } from '../services/mongoose/services';
 
-const BadgeModel = mongoose.model('Badge', badgeSchema());
 const router = express.Router();
 
 // Récupérer tous les badges

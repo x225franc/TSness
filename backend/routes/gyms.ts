@@ -1,8 +1,6 @@
 import express from 'express';
-import mongoose from 'mongoose';
-import { gymSchema } from '../services/mongoose/schema';
+import { GymModel } from '../services/mongoose/services';
 
-const GymModel = mongoose.model('Gym', gymSchema());
 const router = express.Router();
 
 // Récupérer toutes les salles
@@ -64,12 +62,12 @@ router.patch('/:id/assign', async (req, res) => {
     try {
         const update = req.body.$unset
             // Support $unset pour suppression de champ (si envoyé par le front)
-            ? { $unset: req.body.$unset }
-            : {
-                ...(req.body.exerciseTypeId && { exerciseTypeId: req.body.exerciseTypeId }),
-                ...(req.body.difficulty && { difficulty: req.body.difficulty }),
-                ...(req.body.ownerId && { ownerId: req.body.ownerId }),
-            };
+        ? { $unset: req.body.$unset }
+        : {
+            ...(req.body.hasOwnProperty('exerciseTypeId') && { exerciseTypeId: req.body.exerciseTypeId }),
+            ...(req.body.hasOwnProperty('difficulty') && { difficulty: req.body.difficulty }),
+            ...(req.body.hasOwnProperty('ownerId') && { ownerId: req.body.ownerId }),
+        };
         // Si $unset existe, utiliser la syntaxe MongoDB update operators
         const gym = await GymModel.findByIdAndUpdate(
             req.params.id,
@@ -86,7 +84,7 @@ router.patch('/:id/assign', async (req, res) => {
 // Récupérer toutes les salles du propriétaire connecté
 router.get('/owner', async (req, res) => {
     try {
-        const ownerId = req.query.id;
+        const ownerId = req.query['owner_id'];
         if (!ownerId) return res.status(400).json({ erreur: 'ID propriétaire manquant' });
         const gyms = await GymModel.find({ ownerId });
         res.json(gyms); // Retourne un tableau (vide si aucune salle)
@@ -98,7 +96,7 @@ router.get('/owner', async (req, res) => {
 // Modifier une salle spécifique du propriétaire connecté
 router.put('/owner/:gymId', async (req, res) => {
     try {
-        const ownerId = req.body.ownerId;
+        const ownerId = req.query['owner_id'];
         const gymId = req.params.gymId;
         if (!ownerId) return res.status(400).json({ erreur: 'ID propriétaire manquant' });
         if (!gymId) return res.status(400).json({ erreur: 'ID salle manquant' });
@@ -119,7 +117,7 @@ router.put('/owner/:gymId', async (req, res) => {
 // Créer une nouvelle salle pour le propriétaire connecté
 router.post('/owner', async (req, res) => {
     try {
-        const ownerId = req.body.ownerId;
+        const ownerId = req.query['owner_id'];
         if (!ownerId) return res.status(400).json({ erreur: 'ID propriétaire manquant' });
 
         // Vérifier le nombre de salles existantes pour ce propriétaire
@@ -130,7 +128,11 @@ router.post('/owner', async (req, res) => {
             });
         }
 
-        const gym = new GymModel(req.body);
+        const gym = new GymModel({
+            ...req.body,
+            ownerId
+        });
+
         await gym.save();
         res.status(201).json(gym);
     } catch (err) {
@@ -141,7 +143,7 @@ router.post('/owner', async (req, res) => {
 // Supprimer une salle spécifique du propriétaire connecté
 router.delete('/owner/:gymId', async (req, res) => {
     try {
-        const ownerId = req.body.ownerId;
+        const ownerId = req.query['owner_id'];
         const gymId = req.params.gymId;
         if (!ownerId) return res.status(400).json({ erreur: 'ID propriétaire manquant' });
         if (!gymId) return res.status(400).json({ erreur: 'ID salle manquant' });
@@ -150,7 +152,7 @@ router.delete('/owner/:gymId', async (req, res) => {
         const gym = await GymModel.findOneAndDelete({ _id: gymId, ownerId });
         if (!gym) return res.status(404).json({ erreur: 'Aucune salle trouvée pour ce propriétaire avec cet ID' });
 
-        res.json({ message: `Salle "${gym.name}" supprimée avec succès` });
+        res.json({ message: `Salle '${gym.name}' supprimée avec succès` });
     } catch (err) {
         res.status(400).json({ erreur: (err as Error).message });
     }

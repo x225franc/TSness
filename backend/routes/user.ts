@@ -1,10 +1,8 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { userSchema } from '../services/mongoose/schema';
+import { UserModel } from '../services/mongoose/services';
 
-const UserModel = mongoose.model('User', userSchema());
 const router = express.Router();
 
 // Inscription d'un nouvel utilisateur

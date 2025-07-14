@@ -1,22 +1,22 @@
 import express from 'express';
-import { User, Gym, Challenge, Notification, Leaderboard } from '../models/TSness.js';
+import { UserModel, GymModel, ChallengeModel, NotificationModel, LeaderboardModel } from '../services/mongoose/services';
 
 const router = express.Router();
 
 // Récupérer tous les utilisateurs
 router.get('/users', async (req, res) => {
     try {
-        const users = await User.find({}, 'firstname lastname email role isActive createdAt score');
+        const users = await UserModel.find({}, 'firstname lastname email role isActive createdAt score');
         res.json(users);
     } catch (err) {
-        res.status(500).json({ erreur: err.message });
+        res.status(500).json({ erreur: (err as Error).message });
     }
 });
 
 // Désactiver/Activer un utilisateur
 router.patch('/users/:id/toggle-status', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await UserModel.findById(req.params.id);
         if (!user) return res.status(404).json({ erreur: 'Utilisateur non trouvé' });
         
         user.isActive = !user.isActive;
@@ -35,14 +35,14 @@ router.patch('/users/:id/toggle-status', async (req, res) => {
             }
         });
     } catch (err) {
-        res.status(400).json({ erreur: err.message });
+        res.status(400).json({ erreur: (err as Error).message });
     }
 });
 
 // Supprimer un utilisateur avec suppression en cascade
 router.delete('/users/:id', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await UserModel.findById(req.params.id);
         if (!user) return res.status(404).json({ erreur: 'Utilisateur non trouvé' });
         
         // Empêcher la suppression d'un superadmin
@@ -56,15 +56,15 @@ router.delete('/users/:id', async (req, res) => {
         
         if (user.role === 'owner') {
             // Supprimer toutes les salles du propriétaire
-            await Gym.deleteMany({ ownerId: userId });
+            await GymModel.deleteMany({ ownerId: userId });
             
             // Supprimer tous les défis créés par ce propriétaire
-            await Challenge.deleteMany({ createdBy: userId });
+            await ChallengeModel.deleteMany({ createdBy: userId });
         }
         
         if (user.role === 'client' || user.role === 'owner') {
             // Supprimer tous les défis créés par cet utilisateur
-            await Challenge.deleteMany({ createdBy: userId });
+            await ChallengeModel.deleteMany({ createdBy: userId });
             
             // Retirer cet utilisateur des listes d'amis des autres utilisateurs
             // await User.updateMany(
@@ -79,7 +79,7 @@ router.delete('/users/:id', async (req, res) => {
             // );
             
             // Supprimer toutes les notifications liées à cet utilisateur
-            await Notification.deleteMany({ 
+            await NotificationModel.deleteMany({ 
                 $or: [
                     { userId: userId },
                     { relatedId: userId }
@@ -87,14 +87,14 @@ router.delete('/users/:id', async (req, res) => {
             });
             
             // Supprimer ses entrées des leaderboards
-            await Leaderboard.updateMany(
+            await LeaderboardModel.updateMany(
                 { 'entries.userId': userId },
                 { $pull: { entries: { userId: userId } } }
             );
         }
         
         // Supprimer l'utilisateur lui-même
-        await User.findByIdAndDelete(req.params.id);
+        await UserModel.findByIdAndDelete(req.params.id);
         
         res.json({ 
             message: `Utilisateur et toutes ses données associées supprimés avec succès`,
@@ -105,7 +105,7 @@ router.delete('/users/:id', async (req, res) => {
             }
         });
     } catch (err) {
-        res.status(500).json({ erreur: `Erreur lors de la suppression: ${err.message}` });
+        res.status(500).json({ erreur: `Erreur lors de la suppression: ${(err as Error).message}` });
     }
 });
 
@@ -118,7 +118,7 @@ router.patch('/users/:id/role', async (req, res) => {
             return res.status(400).json({ erreur: 'Rôle invalide' });
         }
         
-        const user = await User.findByIdAndUpdate(
+        const user = await UserModel.findByIdAndUpdate(
             req.params.id, 
             { role, updatedAt: new Date() }, 
             { new: true, select: 'firstname lastname email role isActive' }
@@ -131,14 +131,14 @@ router.patch('/users/:id/role', async (req, res) => {
             user 
         });
     } catch (err) {
-        res.status(400).json({ erreur: err.message });
+        res.status(400).json({ erreur: (err as Error).message });
     }
 });
 
 // Prévisualiser ce qui sera supprimé avec un utilisateur (pour confirmation)
 router.get('/users/:id/deletion-preview', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await UserModel.findById(req.params.id);
         if (!user) return res.status(404).json({ erreur: 'Utilisateur non trouvé' });
         
         // Empêcher la suppression d'un superadmin
@@ -154,21 +154,27 @@ router.get('/users/:id/deletion-preview', async (req, res) => {
                 email: user.email,
                 role: user.role
             },
-            toDelete: {}
+            toDelete: {
+                gyms: 0,
+                challenges: 0,
+                notifications: 0,
+                leaderboardEntries: 0,
+                friendRelations: 0
+            }
         };
         
         if (user.role === 'owner') {
             // Compter les salles du propriétaire
-            const gymsCount = await Gym.countDocuments({ ownerId: userId });
+            const gymsCount = await GymModel.countDocuments({ ownerId: userId });
             preview.toDelete.gyms = gymsCount;
         }
         
         // Compter les défis créés par cet utilisateur
-        const challengesCount = await Challenge.countDocuments({ createdBy: userId });
+        const challengesCount = await ChallengeModel.countDocuments({ createdBy: userId });
         preview.toDelete.challenges = challengesCount;
         
         // Compter les notifications liées
-        const notificationsCount = await Notification.countDocuments({
+        const notificationsCount = await NotificationModel.countDocuments({
             $or: [
                 { userId: userId },
                 { relatedId: userId }
@@ -177,18 +183,18 @@ router.get('/users/:id/deletion-preview', async (req, res) => {
         preview.toDelete.notifications = notificationsCount;
         
         // Compter les entrées dans les leaderboards
-        const leaderboardEntries = await Leaderboard.countDocuments({
+        const leaderboardEntries = await LeaderboardModel.countDocuments({
             'entries.userId': userId
         });
         preview.toDelete.leaderboardEntries = leaderboardEntries;
         
         // Compter les amis qui seront affectés
-        const friendsCount = await User.countDocuments({ friends: userId });
+        const friendsCount = await UserModel.countDocuments({ friends: userId });
         preview.toDelete.friendRelations = friendsCount;
         
         res.json(preview);
     } catch (err) {
-        res.status(500).json({ erreur: err.message });
+        res.status(500).json({ erreur: (err as Error).message });
     }
 });
 

@@ -3,10 +3,12 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
+import usersRouter from './routes/user';
 import gymsRouter from './routes/gyms';
-import usersRouter from './routes/users';
+import exerciseTypesRouter from './routes/exercisetypes';
 import badgesRouter from './routes/badges';
 import challengesRouter from './routes/challenges';
+import adminRouter from './routes/admin';
 
 dotenv.config();
 
@@ -17,10 +19,10 @@ app.use(cors());
 // Routes
 app.use('/api/user',usersRouter);
 app.use('/api/gyms', gymsRouter);
-// app.use('/api/exercisetypes', require('./routes/exercisetypes'));
+app.use('/api/exercise-types', exerciseTypesRouter);
 app.use('/api/badges',badgesRouter);
-// app.use('/api/admin', require('./routes/admin'));
 app.use('/api/challenges',challengesRouter);
+app.use('/api/admin', adminRouter);
 
 // MongoDB connection
 if (typeof process.env.MONGODB_URI === 'undefined') {

@@ -1,6 +1,12 @@
 import { Types } from 'mongoose';
 
 export interface Badge {
-    badgeId: Types.ObjectId;
-    earnedAt: Date;
+    name: string;
+    description: string;
+    image: string;
+    rule: {
+        type: string;
+        value: number;
+        details: string;
+    };
 }
