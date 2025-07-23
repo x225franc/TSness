@@ -102,6 +102,7 @@ router.post('/owner', async (req, res) => {
 
 // Récupérer le défi et vérifier les permissions
 router.put('/owner/:challengeId', async (req, res) => {
+
     const { challengeId } = req.params;
     const {
         title,
@@ -111,9 +112,9 @@ router.put('/owner/:challengeId', async (req, res) => {
         difficulty,
         startDate,
         endDate,
-        objectives,
-        ownerId // Should be retrieved from query params
+        objectives
     } = req.body;
+    const ownerId = req.query['owner_id'];
 
     try {
         if (
@@ -153,8 +154,7 @@ router.put('/owner/:challengeId', async (req, res) => {
             difficulty,
             startDate: new Date(startDate).toISOString(),
             endDate: new Date(endDate).toISOString(),
-            objectives: objectives || [],
-            ownerId
+            objectives: objectives || []
         };
 
         const updatedChallenge = await ChallengeModel.findByIdAndUpdate(

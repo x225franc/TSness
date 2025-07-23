@@ -41,5 +41,4 @@ export interface ChallengeInput {
     startDate: string;
     endDate: string;
     objectives?: string[];
-    ownerId: Types.ObjectId | string;
 }

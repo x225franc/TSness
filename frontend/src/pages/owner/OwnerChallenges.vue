@@ -278,12 +278,11 @@
 				difficulty: formData.difficulty,
 				startDate: formData.startDate,
 				endDate: formData.endDate,
-				objectives,
-				ownerId: user.id,
+				objectives
 			};
 
 			const res = await fetch(
-				window.config.BACKEND_URL + `/api/challenges/owner/${challenge._id}`,
+				window.config.BACKEND_URL + `/api/challenges/owner/${challenge._id}?owner_id=${user.id}`,
 				{
 					method: "PUT",
 					headers: { "Content-Type": "application/json" },

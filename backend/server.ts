@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 
 import usersRouter from './routes/user';
 import gymsRouter from './routes/gyms';
-import exerciseTypesRouter from './routes/exercisetypes';
+import exerciseTypesRouter from './routes/exerciseTypes';
 import badgesRouter from './routes/badges';
 import challengesRouter from './routes/challenges';
 import adminRouter from './routes/admin';

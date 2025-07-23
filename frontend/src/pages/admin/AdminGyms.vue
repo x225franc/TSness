@@ -1074,21 +1074,196 @@ onMounted(() => {
 					</div>
 				</div>
 			</div>
-		</div>
 
-		<!-- Section Types d'exercices -->
-		<div
-			class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 m-5"
-		>
+			<!-- Section Types d'exercices -->
 			<div
-				class="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 flex items-center justify-between"
+				class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200"
 			>
-				<div class="flex items-center gap-3">
+				<div
+					class="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 flex items-center justify-between"
+				>
+					<div class="flex items-center gap-3">
+						<div
+							class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"
+						>
+							<svg
+								class="w-6 h-6 text-white"
+								fill="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6h6v-2h-4z"
+								/>
+							</svg>
+						</div>
+						<h3 class="text-2xl font-bold text-white">
+							Types d'exercices ({{ exerciseTypes.length }})
+						</h3>
+					</div>
+					<button
+						@click="showTypeForm = !showTypeForm"
+						class="bg-white/20 hover:bg-white/30 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-200 backdrop-blur-sm"
+					>
+						{{ showTypeForm ? "Fermer" : "➕ Ajouter un type" }}
+					</button>
+				</div>
+
+				<!-- Formulaire Types d'exercices -->
+				<div
+					v-if="showTypeForm"
+					class="p-8 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white"
+				>
+					<form @submit.prevent="onTypeSubmit" class="space-y-6">
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<label class="block text-sm font-semibold text-gray-700 mb-2">
+									<svg
+										class="inline w-4 h-4 mr-1"
+										fill="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+										/>
+									</svg>
+									Nom du type d'exercice
+								</label>
+								<input
+									v-model="typeForm.name"
+									type="text"
+									required
+									class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+									placeholder="Ex: Cardio, Musculation, Yoga..."
+								/>
+							</div>
+							<div>
+								<label class="block text-sm font-semibold text-gray-700 mb-2">
+									<svg
+										class="inline w-4 h-4 mr-1"
+										fill="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											d="M14 2H6C4.9 2 4 2.9 4 4v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"
+										/>
+									</svg>
+									Description
+								</label>
+								<input
+									v-model="typeForm.description"
+									type="text"
+									class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+									placeholder="Description détaillée (optionnel)"
+								/>
+							</div>
+							<div>
+								<label class="block text-sm font-semibold text-gray-700 mb-2">
+									<svg
+										class="inline w-4 h-4 mr-1"
+										fill="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+										/>
+									</svg>
+									Muscles ciblés
+								</label>
+								<input
+									v-model="typeForm.targetedMuscles"
+									type="text"
+									class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+									placeholder="Ex: Pectoraux, Biceps, Quadriceps (séparés par des virgules)"
+								/>
+								<p class="text-xs text-gray-500 mt-1">
+									Séparez les muscles par des virgules
+								</p>
+							</div>
+						</div>
+						<div class="flex justify-end">
+							<button
+								type="submit"
+								class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+							>
+								<svg
+									class="inline w-5 h-5 mr-2"
+									fill="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
+								</svg>
+								{{ typeForm._id ? "Modifier le type" : "Ajouter le type" }}
+							</button>
+						</div>
+					</form>
+				</div>
+
+				<!-- Version mobile : cartes -->
+				<div class="block md:hidden p-4 space-y-6">
 					<div
-						class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"
+						v-for="type in exerciseTypes"
+						:key="type._id"
+						class="rounded-2xl border border-gray-200 shadow p-4 bg-white flex flex-col gap-2"
+					>
+						<div class="flex items-center justify-between">
+							<div class="font-bold text-lg text-gray-900">{{ type.name }}</div>
+							<div class="flex gap-2">
+								<button
+									@click="editType(type)"
+									class="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+								>
+									✏️
+								</button>
+								<button
+									@click="deleteType(type)"
+									class="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+								>
+									🗑️
+								</button>
+							</div>
+						</div>
+						<div class="text-xs text-gray-500" v-if="type.description">
+							{{ type.description }}
+						</div>
+						<div class="text-xs text-gray-400 italic" v-else>
+							Aucune description
+						</div>
+						<div
+							v-if="type.targetedMuscles && type.targetedMuscles.length > 0"
+							class="mt-2"
+						>
+							<div class="text-xs font-semibold text-gray-600 mb-1">
+								Muscles ciblés :
+							</div>
+							<div class="flex flex-wrap gap-1">
+								<span
+									v-for="muscle in type.targetedMuscles"
+									:key="muscle"
+									class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
+								>
+									{{ muscle }}
+								</span>
+							</div>
+						</div>
+					</div>
+					<div
+						v-if="exerciseTypes.length === 0"
+						class="text-center text-gray-500 py-8"
+					>
+						Aucun type d'exercice
+					</div>
+				</div>
+
+				<!-- Message si aucun type d'exercice -->
+				<div
+					v-if="exerciseTypes.length === 0"
+					class="text-center text-gray-500 py-12"
+				>
+					<div
+						class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center"
 					>
 						<svg
-							class="w-6 h-6 text-white"
+							class="w-12 h-12 text-gray-400"
 							fill="currentColor"
 							viewBox="0 0 24 24"
 						>
@@ -1097,263 +1272,88 @@ onMounted(() => {
 							/>
 						</svg>
 					</div>
-					<h3 class="text-2xl font-bold text-white">
-						Types d'exercices ({{ exerciseTypes.length }})
-					</h3>
+					<p class="text-xl font-medium text-gray-600">Aucun type d'exercice</p>
+					<p class="text-gray-500 mt-2">
+						Ajoutez des types d'exercices pour organiser vos salles
+					</p>
 				</div>
-				<button
-					@click="showTypeForm = !showTypeForm"
-					class="bg-white/20 hover:bg-white/30 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-200 backdrop-blur-sm"
-				>
-					{{ showTypeForm ? "Fermer" : "➕ Ajouter un type" }}
-				</button>
-			</div>
 
-			<!-- Formulaire Types d'exercices -->
-			<div
-				v-if="showTypeForm"
-				class="p-8 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white"
-			>
-				<form @submit.prevent="onTypeSubmit" class="space-y-6">
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div>
-							<label class="block text-sm font-semibold text-gray-700 mb-2">
-								<svg
-									class="inline w-4 h-4 mr-1"
-									fill="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-									/>
-								</svg>
-								Nom du type d'exercice
-							</label>
-							<input
-								v-model="typeForm.name"
-								type="text"
-								required
-								class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-								placeholder="Ex: Cardio, Musculation, Yoga..."
-							/>
-						</div>
-						<div>
-							<label class="block text-sm font-semibold text-gray-700 mb-2">
-								<svg
-									class="inline w-4 h-4 mr-1"
-									fill="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										d="M14 2H6C4.9 2 4 2.9 4 4v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"
-									/>
-								</svg>
-								Description
-							</label>
-							<input
-								v-model="typeForm.description"
-								type="text"
-								class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-								placeholder="Description détaillée (optionnel)"
-							/>
-						</div>
-						<div>
-							<label class="block text-sm font-semibold text-gray-700 mb-2">
-								<svg
-									class="inline w-4 h-4 mr-1"
-									fill="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
-									/>
-								</svg>
-								Muscles ciblés
-							</label>
-							<input
-								v-model="typeForm.targetedMuscles"
-								type="text"
-								class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-								placeholder="Ex: Pectoraux, Biceps, Quadriceps (séparés par des virgules)"
-							/>
-							<p class="text-xs text-gray-500 mt-1">
-								Séparez les muscles par des virgules
-							</p>
-						</div>
-					</div>
-					<div class="flex justify-end">
-						<button
-							type="submit"
-							class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-						>
-							<svg
-								class="inline w-5 h-5 mr-2"
-								fill="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
-							</svg>
-							{{ typeForm._id ? "Modifier le type" : "Ajouter le type" }}
-						</button>
-					</div>
-				</form>
-			</div>
-
-			<!-- Version mobile : cartes -->
-			<div class="block md:hidden p-4 space-y-6">
-				<div
-					v-for="type in exerciseTypes"
-					:key="type._id"
-					class="rounded-2xl border border-gray-200 shadow p-4 bg-white flex flex-col gap-2"
-				>
-					<div class="flex items-center justify-between">
-						<div class="font-bold text-lg text-gray-900">{{ type.name }}</div>
-						<div class="flex gap-2">
-							<button
-								@click="editType(type)"
-								class="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-							>
-								✏️
-							</button>
-							<button
-								@click="deleteType(type)"
-								class="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
-							>
-								🗑️
-							</button>
-						</div>
-					</div>
-					<div class="text-xs text-gray-500" v-if="type.description">
-						{{ type.description }}
-					</div>
-					<div class="text-xs text-gray-400 italic" v-else>
-						Aucune description
-					</div>
-					<div
-						v-if="type.targetedMuscles && type.targetedMuscles.length > 0"
-						class="mt-2"
-					>
-						<div class="text-xs font-semibold text-gray-600 mb-1">
-							Muscles ciblés :
-						</div>
-						<div class="flex flex-wrap gap-1">
-							<span
-								v-for="muscle in type.targetedMuscles"
-								:key="muscle"
-								class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
-							>
-								{{ muscle }}
-							</span>
-						</div>
-					</div>
-				</div>
-				<div
-					v-if="exerciseTypes.length === 0"
-					class="text-center text-gray-500 py-8"
-				>
-					Aucun type d'exercice
-				</div>
-			</div>
-
-			<!-- Message si aucun type d'exercice -->
-			<div
-				v-if="exerciseTypes.length === 0"
-				class="text-center text-gray-500 py-12"
-			>
-				<div
-					class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center"
-				>
-					<svg
-						class="w-12 h-12 text-gray-400"
-						fill="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6h6v-2h-4z"
-						/>
-					</svg>
-				</div>
-				<p class="text-xl font-medium text-gray-600">Aucun type d'exercice</p>
-				<p class="text-gray-500 mt-2">
-					Ajoutez des types d'exercices pour organiser vos salles
-				</p>
-			</div>
-
-			<!-- Grille de cartes pour les types d'exercices -->
-			<div v-else class="p-6">
-				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					<div
-						v-for="type in exerciseTypes"
-						:key="type._id"
-						class="group bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
-					>
-						<!-- Header de la carte type d'exercice -->
+				<!-- Grille de cartes pour les types d'exercices -->
+				<div v-else class="p-6">
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 						<div
-							class="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white"
+							v-for="type in exerciseTypes"
+							:key="type._id"
+							class="group bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
 						>
-							<h4 class="text-lg font-bold truncate">{{ type.name }}</h4>
-						</div>
-
-						<!-- Corps de la carte -->
-						<div class="p-4">
-							<p v-if="type.description" class="text-gray-600 text-sm mb-3">
-								{{ type.description }}
-							</p>
-							<p v-else class="text-gray-400 text-sm italic mb-3">
-								Aucune description
-							</p>
-
-							<!-- Muscles ciblés -->
+							<!-- Header de la carte type d'exercice -->
 							<div
-								v-if="type.targetedMuscles && type.targetedMuscles.length > 0"
-								class="mb-4"
+								class="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white"
 							>
-								<h5 class="text-xs font-semibold text-gray-600 mb-2">
-									Muscles ciblés :
-								</h5>
-								<div class="flex flex-wrap gap-1">
-									<span
-										v-for="muscle in type.targetedMuscles"
-										:key="muscle"
-										class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
-									>
-										{{ muscle }}
-									</span>
-								</div>
+								<h4 class="text-lg font-bold truncate">{{ type.name }}</h4>
 							</div>
 
-							<!-- Actions -->
-							<div class="flex gap-2">
-								<button
-									@click="editType(type)"
-									class="flex-1 px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg transform hover:scale-105 flex items-center justify-center"
+							<!-- Corps de la carte -->
+							<div class="p-4">
+								<p v-if="type.description" class="text-gray-600 text-sm mb-3">
+									{{ type.description }}
+								</p>
+								<p v-else class="text-gray-400 text-sm italic mb-3">
+									Aucune description
+								</p>
+
+								<!-- Muscles ciblés -->
+								<div
+									v-if="type.targetedMuscles && type.targetedMuscles.length > 0"
+									class="mb-4"
 								>
-									<svg
-										class="w-4 h-4 mr-1"
-										fill="currentColor"
-										viewBox="0 0 24 24"
+									<h5 class="text-xs font-semibold text-gray-600 mb-2">
+										Muscles ciblés :
+									</h5>
+									<div class="flex flex-wrap gap-1">
+										<span
+											v-for="muscle in type.targetedMuscles"
+											:key="muscle"
+											class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
+										>
+											{{ muscle }}
+										</span>
+									</div>
+								</div>
+
+								<!-- Actions -->
+								<div class="flex gap-2">
+									<button
+										@click="editType(type)"
+										class="flex-1 px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg transform hover:scale-105 flex items-center justify-center"
 									>
-										<path
-											d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
-										/>
-									</svg>
-									Modifier
-								</button>
-								<button
-									@click="deleteType(type)"
-									class="flex-1 px-3 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 hover:shadow-lg transform hover:scale-105 flex items-center justify-center"
-								>
-									<svg
-										class="w-4 h-4 mr-1"
-										fill="currentColor"
-										viewBox="0 0 24 24"
+										<svg
+											class="w-4 h-4 mr-1"
+											fill="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+											/>
+										</svg>
+										Modifier
+									</button>
+									<button
+										@click="deleteType(type)"
+										class="flex-1 px-3 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 hover:shadow-lg transform hover:scale-105 flex items-center justify-center"
 									>
-										<path
-											d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
-										/>
-									</svg>
-									Supprimer
-								</button>
+										<svg
+											class="w-4 h-4 mr-1"
+											fill="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+											/>
+										</svg>
+										Supprimer
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
