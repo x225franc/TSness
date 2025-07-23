@@ -16,6 +16,7 @@ export function userSchema(): Schema<User> {
             updatedAt: { type: Date },
             challenges_created: { type: [challengeCreatedSchema()] },
             challenges_joined: { type: [challengeJoinedSchema()] },
+            challenges_completed: [{ type: Schema.Types.ObjectId, ref: 'Challenge' }],
             friends: { type: [Schema.Types.ObjectId] },
             badges: { type: [badgeSchema()] },
             score: { type: Number }

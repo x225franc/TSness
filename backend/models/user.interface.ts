@@ -13,6 +13,7 @@ export interface User {
     updatedAt: Date;
     challenges_created: ChallengeCreated[];
     challenges_joined: ChallengeJoined[];
+    challenges_completed: Types.ObjectId[];
     friends: Types.ObjectId[];
     badges: Badge[];
     score: number;

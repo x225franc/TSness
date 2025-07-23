@@ -1,5 +1,5 @@
 import express from 'express';
-import { GymModel, ChallengeModel, ExerciseTypeModel } from '../services/mongoose/services';
+import { GymModel, ChallengeModel, ExerciseTypeModel, UserModel } from '../services/mongoose/services';
 import { ChallengeInput } from '../models';
 
 const router = express.Router();
@@ -211,6 +211,48 @@ router.get('/exercise-types', async (req, res) => {
     try {
         const exerciseTypes = await ExerciseTypeModel.find({}, '_id name description targetedMuscles');
         res.json(exerciseTypes);
+    } catch (err) {
+        res.status(400).json({ erreur: (err as Error).message });
+    }
+});
+
+// Compléter un défi (par un utilisateur)
+router.post('/complete/:challengeId', async (req, res) => {
+    try {
+        const { challengeId } = req.params;
+        const userId = req.query['user_id'];
+
+        // Vérifier si le challengeId est fourni
+        if (!challengeId) {
+            return res.status(400).json({ erreur: 'ID du défi requis' });
+        }
+        // Vérifier que le challenge existe
+        const challenge = await ChallengeModel.findById(challengeId);
+        if (!challenge) {
+            return res.status(404).json({ erreur: 'Défi non trouvé' });
+        }
+
+        // Vérifier si le userId est fourni
+        if (!userId) {
+            return res.status(400).json({ erreur: 'ID de l\'utilisateur requis' });
+        }
+        // Vérifier que l'utilisateur existe
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ erreur: 'Utilisateur non trouvé' });
+        }
+
+        // Vérifier si le challenge estdéjà complété pour l'utilisateur
+        if (user.challenges_completed && user.challenges_completed.includes(challenge._id)) {
+            return res.status(400).json({ erreur: 'Challenge déjà complété' });
+        }
+
+        user.challenges_completed = user.challenges_completed || [];
+        user.challenges_completed.push(challenge._id);
+        user.score = (user.score || 0) + 1;
+        await user.save();
+
+        res.json({ message: 'Challenge complété avec succès', score: user.score });
     } catch (err) {
         res.status(400).json({ erreur: (err as Error).message });
     }
