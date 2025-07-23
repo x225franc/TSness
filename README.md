@@ -81,10 +81,10 @@ Application web de gestion de salles de sport avec un backend Node.js/Express, u
 - `DELETE /:id` : Supprimer une salle
 - `PATCH /:id/approve` : Approuver une salle
 - `PATCH /:id/assign` : Attribuer type d'exercice/difficulté/responsable
-- `GET /owner?id=:ownerId` : Récupérer les salles d'un propriétaire
-- `PUT /owner/:gymId` : Modifier une salle spécifique du propriétaire
-- `POST /owner` : Créer une salle pour un propriétaire
-- `DELETE /owner/:gymId` : Supprimer une salle spécifique du propriétaire
+- `GET /owner?owner_id=:ownerId` : Récupérer les salles d'un propriétaire
+- `POST /owner?owner_id=:ownerId` : Créer une salle pour un propriétaire
+- `PUT /owner/:gymId?owner_id=:ownerId` : Modifier une salle spécifique du propriétaire
+- `DELETE /owner/:gymId?owner_id=:ownerId` : Supprimer une salle spécifique du propriétaire
 
 #### Gestion des badges (/api/badges)
 - `GET /` : Lister tous les badges
@@ -108,9 +108,9 @@ Application web de gestion de salles de sport avec un backend Node.js/Express, u
 #### Gestion des défis (/api/challenges)
 - `GET /` : Lister tous les défis (avec données populées)
 - `GET /owner?ownerId=:ownerId` : Récupérer les défis d'un propriétaire via ses salles
-- `POST /owner` : Créer un nouveau défi pour une salle du propriétaire
-- `PUT /owner/:challengeId` : Modifier un défi existant (propriétaire uniquement)
-- `DELETE /owner/:challengeId` : Supprimer un défi (propriétaire uniquement)
+- `POST /owner?owner_id=:ownerId` : Créer un nouveau défi pour une salle du propriétaire
+- `PUT /owner/:challengeId?owner_id=:ownerId` : Modifier un défi existant (propriétaire uniquement)
+- `DELETE /owner/:challengeId?owner_id=:ownerId` : Supprimer un défi (propriétaire uniquement)
 - `GET /exercise-types` : Récupérer les types d'exercices pour les formulaires
 
 #### Authentification et utilisateurs (/api/user)
@@ -138,7 +138,7 @@ Application web de gestion de salles de sport avec un backend Node.js/Express, u
         description: String,
         type: String,
         difficulty: String,
-        duration: String // A supprimer en BDD puis ici
+        durationInDays: String
       } ]
     - challenges_joined: [ {
         challengeId: ObjectId,
@@ -187,7 +187,7 @@ Application web de gestion de salles de sport avec un backend Node.js/Express, u
     - gymId: ObjectId
     - exerciseTypeId: ObjectId
     - difficulty: String ("facile" | "intermédiaire" | "difficile")
-    - duration: String // A supprimer en BDD puis ici
+    - durationInDays: String
     - objectives: [String]
     - createdAt: Date
 

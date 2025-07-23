@@ -32,15 +32,12 @@ intégrée dans le système.
 Le responsable peut suggérer des défis basés sur les équipements disponibles dans la salle, les types
 d'entraînement populaires, etc. -->
 
--> permet d'augmenter son score de l'utilisateur client.
+<!-- -> permet d'augmenter le score d'utilisateur client. -->
 
 Coté utilisateur client:
-Création et Partage de Défis : Les utilisateurs peuvent créer et partager des défis d'entraînement physique
-avec d'autres membres de la communauté. Chaque défi peut inclure des objectifs spécifiques, des exercices
-recommandés, et une durée définie.
-Exploration des Défis : Les membres peuvent explorer une variété de défis d'entraînement physique créés
-par d'autres utilisateurs. Ils peuvent filtrer les défis en fonction de la difficulté, du type d'exercice, et de la
-durée.
+Création et Partage de Défis : Les utilisateurs peuvent créer et partager des défis d'entraînement physique avec d'autres membres de la communauté. Chaque défi peut inclure des objectifs spécifiques, des exercices recommandés, et une durée définie.
+
+Exploration des Défis : Les membres peuvent explorer une variété de défis d'entraînement physique créés par d'autres utilisateurs. Ils peuvent filtrer les défis en fonction de la difficulté, du type d'exercice, et de la durée.
 
 Suivi de l'Entraînement : Les utilisateurs peuvent suivre leur progression dans les défis enregistrant leurs
 séances d'entraînement, le nombre de calories brûlées, et d'autres statistiques pertinentes.

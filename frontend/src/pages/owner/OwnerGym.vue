@@ -43,7 +43,7 @@
 			if (!user || !user.id) throw new Error("Utilisateur non trouvé");
 
 			const res = await fetch(
-				window.config.BACKEND_URL + `/api/gyms/owner?id=${user.id}`
+				window.config.BACKEND_URL + `/api/gyms/owner?owner_id=${user.id}`
 			);
 
 			if (!res.ok) throw new Error("Impossible de charger les salles");
@@ -138,12 +138,11 @@
 					.map((a) => a.trim())
 					.filter(Boolean),
 				description: formData.description,
-				ownerId: String(user.id),
 				isApproved: gym.isApproved,
 			};
 
 			const res = await fetch(
-				window.config.BACKEND_URL + `/api/gyms/owner/${gym._id}`,
+				window.config.BACKEND_URL + `/api/gyms/owner/${gym._id}?owner_id=${user.id}`,
 				{
 					method: "PUT",
 					headers: { "Content-Type": "application/json" },
@@ -212,15 +211,17 @@
 					.map((a) => a.trim())
 					.filter(Boolean),
 				description: createForm.value.description,
-				ownerId: user.id,
 				isApproved: false,
 			};
 
-			const res = await fetch(window.config.BACKEND_URL + `/api/gyms/owner`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(payload),
-			});
+			const res = await fetch(
+				window.config.BACKEND_URL + `/api/gyms/owner?owner_id=${user.id}`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(payload),
+				}
+			);
 
 			if (!res.ok) throw new Error("Erreur lors de la création de la salle");
 
@@ -282,11 +283,9 @@
 			if (!user || !user.id) throw new Error("Utilisateur non trouvé");
 
 			const res = await fetch(
-				window.config.BACKEND_URL + `/api/gyms/owner/${gym._id}`,
+				window.config.BACKEND_URL + `/api/gyms/owner/${gym._id}?owner_id=${user.id}`,
 				{
-					method: "DELETE",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ ownerId: user.id }),
+					method: "DELETE"
 				}
 			);
 

@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
 // Récupérer les défis d'un propriétaire spécifique (via ses salles)
 router.get('/owner', async (req, res) => {
     try {
-        const ownerId = req.query.ownerId;
+        const ownerId = req.query['owner_id'];
         if (!ownerId) return res.status(400).json({ erreur: 'ID du propriétaire requis' });
 
         // Récupérer toutes les salles du propriétaire
@@ -48,14 +48,16 @@ router.post('/owner', async (req, res) => {
             gymIds,
             exerciseTypeId,
             difficulty,
-            startDate,
-            endDate,
+            durationInDays,
             objectives
         } = req.body;
         const ownerId = req.query['owner_id'];
+        if (!ownerId) {
+            return res.status(400).json({ erreur: 'ID du propriétaire requis' });
+        }
 
         if (
-            !title || !description || !gymIds || !Array.isArray(gymIds) || gymIds.length === 0 || !startDate || !endDate
+            !title || !description || !gymIds || !Array.isArray(gymIds) || gymIds.length === 0 || !durationInDays
         ) {
             return res.status(400).json({ erreur: 'Champs obligatoires manquants' });
         }
@@ -80,8 +82,7 @@ router.post('/owner', async (req, res) => {
             gymIds,
             exerciseTypeId: exerciseTypeId || null,
             difficulty,
-            startDate: new Date(startDate),
-            endDate: new Date(endDate),
+            durationInDays,
             objectives: objectives || [],
             createdBy: ownerId,
             createdAt: new Date()
@@ -102,7 +103,6 @@ router.post('/owner', async (req, res) => {
 
 // Récupérer le défi et vérifier les permissions
 router.put('/owner/:challengeId', async (req, res) => {
-
     const { challengeId } = req.params;
     const {
         title,
@@ -110,16 +110,14 @@ router.put('/owner/:challengeId', async (req, res) => {
         gymIds,
         exerciseTypeId,
         difficulty,
-        startDate,
-        endDate,
+        durationInDays,
         objectives
     } = req.body;
     const ownerId = req.query['owner_id'];
 
     try {
         if (
-            !title || !description || !gymIds || !Array.isArray(gymIds) || gymIds.length === 0 ||
-            !ownerId || !startDate || !endDate
+            !title || !description || !gymIds || !Array.isArray(gymIds) || gymIds.length === 0 || !durationInDays
         ) {
             return res.status(400).json({ erreur: 'Champs obligatoires manquants' });
         }
@@ -152,8 +150,7 @@ router.put('/owner/:challengeId', async (req, res) => {
             gymIds,
             exerciseTypeId,
             difficulty,
-            startDate: new Date(startDate).toISOString(),
-            endDate: new Date(endDate).toISOString(),
+            durationInDays,
             objectives: objectives || []
         };
 

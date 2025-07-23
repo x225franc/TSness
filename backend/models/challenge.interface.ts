@@ -5,7 +5,7 @@ export interface ChallengeCreated {
     description: string;
     type: string;
     difficulty: string;
-    duration: string; // A supprimer en BDD puis ici
+    durationInDays: string;
 }
 
 export interface ChallengeJoined {
@@ -25,9 +25,7 @@ export interface Challenge {
     gymIds: [{ type: Types.ObjectId, ref: 'Gym' }];
     exerciseTypeId: Types.ObjectId;
     difficulty: { type: String; enum: ['facile', 'intermédiaire', 'difficile'] };
-    startDate: Date;
-    endDate: Date;
-    duration: String; // A supprimer en BDD puis ici
+    durationInDays: number;
     objectives: [String];
     createdAt: Date;
 }
@@ -38,7 +36,6 @@ export interface ChallengeInput {
     gymIds: Types.ObjectId[] | string[];
     exerciseTypeId?: Types.ObjectId | string;
     difficulty?: string;
-    startDate: string;
-    endDate: string;
+    durationInDays: number;
     objectives?: string[];
 }

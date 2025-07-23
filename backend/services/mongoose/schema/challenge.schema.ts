@@ -8,7 +8,7 @@ export function challengeCreatedSchema(): Schema<ChallengeCreated> {
             description: { type: String },
             type: { type: String },
             difficulty: { type: String },
-            duration: { type: String } // A supprimer en BDD puis ici
+            durationInDays: { type: String }
         },
         { _id: false }
     );
@@ -38,9 +38,7 @@ export function challengeSchema(): Schema<Challenge> {
             gymIds: [{ type: Schema.Types.ObjectId, ref: 'Gym' }],
             exerciseTypeId: { type: Schema.Types.ObjectId, ref: 'ExerciseType' },
             difficulty: { type: String, enum: ['facile', 'intermédiaire', 'difficile'] },
-            startDate: { type: Date, required: true },
-            endDate: { type: Date, required: true },
-            duration: { type: String }, // A supprimer en BDD puis ici
+            durationInDays: { type: Number, required: true },
             objectives: [{ type: String }],
             createdAt: { type: Date, default: Date.now }
         }

@@ -21,8 +21,7 @@
 		gymIds: [],
 		exerciseTypeId: "",
 		difficulty: "facile",
-		startDate: "",
-		endDate: "",
+		durationInDays: 0,
 		objectivesText: "",
 	});
 
@@ -30,30 +29,6 @@
 	const approvedGyms = computed(() => {
 		return gyms.value.filter((gym) => gym.isApproved);
 	});
-
-	// Fonction pour calculer automatiquement la durée entre deux dates
-	const calculateDuration = (startDate, endDate) => {
-		if (!startDate || !endDate) return "";
-
-		const start = new Date(startDate);
-		const end = new Date(endDate);
-		const diffInMilliseconds = end - start;
-		const diffInDays = Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
-
-		if (diffInDays <= 0) return "Durée invalide";
-		if (diffInDays === 1) return "1 jour";
-		if (diffInDays < 7) return `${diffInDays} jours`;
-		if (diffInDays < 30) {
-			const weeks = Math.round(diffInDays / 7);
-			return weeks === 1 ? "1 semaine" : `${weeks} semaines`;
-		}
-		if (diffInDays < 365) {
-			const months = Math.round(diffInDays / 30);
-			return months === 1 ? "1 mois" : `${months} mois`;
-		}
-		const years = Math.round(diffInDays / 365);
-		return years === 1 ? "1 an" : `${years} ans`;
-	};
 
 	const loadData = async () => {
 		loading.value = true;
@@ -82,7 +57,7 @@
 
 	const loadGyms = async (ownerId) => {
 		const res = await fetch(
-			window.config.BACKEND_URL + `/api/gyms/owner?id=${ownerId}`
+			window.config.BACKEND_URL + `/api/gyms/owner?owner_id=${ownerId}`
 		);
 		if (!res.ok) throw new Error("Impossible de charger les salles");
 		gyms.value = await res.json();
@@ -90,8 +65,9 @@
 
 	const loadChallenges = async (ownerId) => {
 		const res = await fetch(
-			window.config.BACKEND_URL + `/api/challenges/owner?ownerId=${ownerId}`
+			window.config.BACKEND_URL + `/api/challenges/owner?owner_id=${ownerId}`
 		);
+		console.log(res)
 		if (!res.ok) throw new Error("Impossible de charger les défis");
 		challenges.value = await res.json();
 	};
@@ -113,13 +89,10 @@
 			editForms.value[challenge._id] = {
 				title: challenge.title || "",
 				description: challenge.description || "",
-				gymIds: challenge.gymIds
-					? challenge.gymIds.map((gym) => gym._id || gym)
-					: [],
+				gymIds: challenge.gymIds ? challenge.gymIds.map((gym) => gym._id || gym) : [],
 				exerciseTypeId: challenge.exerciseTypeId?._id || "",
 				difficulty: challenge.difficulty || "facile",
-				startDate: challenge.startDate ? challenge.startDate.split("T")[0] : "",
-				endDate: challenge.endDate ? challenge.endDate.split("T")[0] : "",
+				durationInDays: challenge.durationInDays || 0,
 				objectivesText: (challenge.objectives || []).join("\n"),
 			};
 		});
@@ -148,26 +121,13 @@
 				throw new Error("Veuillez sélectionner au moins une salle");
 			}
 
-			// Validation des dates
-			if (!createForm.value.startDate || !createForm.value.endDate) {
+			// Validation de la durée
+			if (!createForm.value.durationInDays) {
 				window.scrollTo({
 					top: 0,
 					behavior: "smooth",
 				});
-				throw new Error("Veuillez renseigner les dates de début et de fin");
-			}
-
-			if (
-				new Date(createForm.value.startDate) >=
-				new Date(createForm.value.endDate)
-			) {
-				window.scrollTo({
-					top: 0,
-					behavior: "smooth",
-				});
-				throw new Error(
-					"La date de fin doit être postérieure à la date de début"
-				);
+				throw new Error("Veuillez renseigner la durée du défi");
 			}
 
 			const objectives = createForm.value.objectivesText
@@ -178,17 +138,15 @@
 			const payload = {
 				title: createForm.value.title,
 				description: createForm.value.description,
-				gymIds: createForm.value.gymIds, // Tableau de salles
+				gymIds: createForm.value.gymIds,
 				exerciseTypeId: createForm.value.exerciseTypeId || null,
 				difficulty: createForm.value.difficulty,
-				startDate: createForm.value.startDate,
-				endDate: createForm.value.endDate,
-				objectives,
-				ownerId: user.id,
+				durationInDays: Number(createForm.value.durationInDays),
+				objectives
 			};
 
 			const res = await fetch(
-				window.config.BACKEND_URL + "/api/challenges/owner",
+				window.config.BACKEND_URL + "/api/challenges/owner?owner_id=" + user.id,
 				{
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -211,8 +169,7 @@
 				gymIds: [],
 				exerciseTypeId: "",
 				difficulty: "facile",
-				startDate: "",
-				endDate: "",
+				durationInDays: 0,
 				objectivesText: "",
 			};
 
@@ -248,10 +205,10 @@
 			editForms.value[challengeId] = {
 				title: challenge.title || "",
 				description: challenge.description || "",
+				gymIds: challenge.gymIds ? challenge.gymIds.map((gym) => gym._id || gym) : [],
 				exerciseTypeId: challenge.exerciseTypeId?._id || "",
 				difficulty: challenge.difficulty || "facile",
-				startDate: challenge.startDate ? challenge.startDate.split("T")[0] : "",
-				endDate: challenge.endDate ? challenge.endDate.split("T")[0] : "",
+				durationInDays: challenge.durationInDays || 0,
 				objectivesText: (challenge.objectives || []).join("\n"),
 			};
 		}
@@ -274,12 +231,13 @@
 			const payload = {
 				title: formData.title,
 				description: formData.description,
+				gymIds: formData.gymIds, // <-- Ajouté ici
 				exerciseTypeId: formData.exerciseTypeId || null,
 				difficulty: formData.difficulty,
-				startDate: formData.startDate,
-				endDate: formData.endDate,
+				durationInDays: Number(formData.durationInDays),
 				objectives
 			};
+			console.log(payload)
 
 			const res = await fetch(
 				window.config.BACKEND_URL + `/api/challenges/owner/${challenge._id}?owner_id=${user.id}`,
@@ -334,11 +292,9 @@
 			if (!user || !user.id) throw new Error("Utilisateur non trouvé");
 
 			const res = await fetch(
-				window.config.BACKEND_URL + `/api/challenges/owner/${challenge._id}`,
+				window.config.BACKEND_URL + `/api/challenges/owner/${challenge._id}?owner_id=${user.id}`,
 				{
-					method: "DELETE",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ ownerId: user.id }),
+					method: "DELETE"
 				}
 			);
 
@@ -365,6 +321,15 @@
 				behavior: "smooth",
 			});
 		}
+	};
+
+	const formatDuration = (days) => {
+		if (!days || days < 1) return "Moins d’un jour";
+		if (days === 1) return "1 jour";
+		if (days < 7) return `${days} jours`;
+		if (days < 30) return `${Math.round(days / 7)} semaine(s)`;
+		if (days < 365) return `${Math.round(days / 30)} mois`;
+		return `${Math.round(days / 365)} an(s)`;
 	};
 
 	onMounted(async () => {
@@ -668,37 +633,22 @@
 											</div>
 										</div>
 
-										<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-											<div>
-												<label
-													class="block text-sm font-semibold text-gray-700 mb-2"
-												>
-													Date de début *
-												</label>
-												<input
-													v-model="createForm.startDate"
-													type="date"
-													required
-													class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-												/>
-											</div>
-											<div>
-												<label
-													class="block text-sm font-semibold text-gray-700 mb-2"
-												>
-													Date de fin *
-												</label>
-												<input
-													v-model="createForm.endDate"
-													type="date"
-													required
-													class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-												/>
-											</div>
+										<div>
+											<label class="block text-sm font-semibold text-gray-700 mb-2">
+												Durée du défi (en jours) *
+											</label>
+											<input
+												v-model="createForm.durationInDays"
+												type="number"
+												min="1"
+												required
+												class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+												placeholder="Ex : 604800 pour 7 jours"
+											/>
 										</div>
 
 										<div
-											v-if="createForm.startDate && createForm.endDate"
+											v-if="createForm.durationInDays"
 											class="bg-blue-50 border border-blue-200 rounded-xl p-4"
 										>
 											<div class="flex items-center gap-2">
@@ -712,13 +662,8 @@
 													/>
 												</svg>
 												<span class="text-blue-700 font-medium">
-													Durée calculée :
-													{{
-														calculateDuration(
-															createForm.startDate,
-															createForm.endDate
-														)
-													}}
+													Durée  :
+													{{ formatDuration(createForm.durationInDays) }}
 												</span>
 											</div>
 										</div>
@@ -930,37 +875,9 @@
 															{{ challenge.difficulty }}
 														</span>
 
-														<!-- Affichage des dates et durée -->
-														<div
-															v-if="challenge.startDate && challenge.endDate"
-															class="flex items-center gap-1 text-gray-600"
-														>
-															<svg
-																class="w-4 h-4"
-																fill="currentColor"
-																viewBox="0 0 24 24"
-															>
-																<path
-																	d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"
-																/>
-															</svg>
-															<span class="text-xs">
-																{{
-																	new Date(
-																		challenge.startDate
-																	).toLocaleDateString("fr-FR")
-																}}
-																-
-																{{
-																	new Date(
-																		challenge.endDate
-																	).toLocaleDateString("fr-FR")
-																}}
-															</span>
-														</div>
-
+														<!-- Affichage de la durée -->
 														<span
-															v-if="challenge.duration"
+															v-if="challenge.durationInDays"
 															class="flex items-center gap-1 text-gray-600"
 														>
 															<svg
@@ -972,7 +889,7 @@
 																	d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6h6v-2h-4z"
 																/>
 															</svg>
-															{{ challenge.duration }}
+															{{ challenge.durationInDays }}
 														</span>
 													</div>
 
@@ -1075,68 +992,19 @@
 																<option value="difficile">🔴 Difficile</option>
 															</select>
 														</div>
-														<div>
-															<label
-																class="block text-sm font-medium text-gray-700 mb-1"
-																>Date de début</label
-															>
-															<input
-																v-model="editForms[challenge._id].startDate"
-																type="date"
-																class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-															/>
-														</div>
 													</div>
 
-													<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-														<div>
-															<label
-																class="block text-sm font-medium text-gray-700 mb-1"
-																>Date de fin</label
-															>
-															<input
-																v-model="editForms[challenge._id].endDate"
-																type="date"
-																class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-															/>
-														</div>
-														<div
-															v-if="
-																editForms[challenge._id].startDate &&
-																editForms[challenge._id].endDate
-															"
-															class="flex items-end"
-														>
-															<div
-																class="bg-blue-50 border border-blue-200 rounded-lg p-3 w-full"
-															>
-																<label
-																	class="block text-sm font-medium text-gray-700 mb-1"
-																	>Durée calculée</label
-																>
-																<div class="flex items-center gap-2">
-																	<svg
-																		class="w-4 h-4 text-blue-600"
-																		fill="currentColor"
-																		viewBox="0 0 24 24"
-																	>
-																		<path
-																			d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6h6v-2h-4z"
-																		/>
-																	</svg>
-																	<span
-																		class="text-blue-700 font-medium text-sm"
-																	>
-																		{{
-																			calculateDuration(
-																				editForms[challenge._id].startDate,
-																				editForms[challenge._id].endDate
-																			)
-																		}}
-																	</span>
-																</div>
-															</div>
-														</div>
+													<div>
+														<label class="block text-sm font-medium text-gray-700 mb-1">
+															Durée (en jours)
+														</label>
+														<input
+															v-model="editForms[challenge._id].durationInDays"
+															type="number"
+															min="1"
+															required
+															class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+														/>
 													</div>
 
 													<div>
