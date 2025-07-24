@@ -2,7 +2,6 @@ import express from "express";
 import {
 	GymModel,
 	ChallengeModel,
-	ExerciseTypeModel,
 	UserModel,
 	BadgeModel,
 } from "../services/mongoose/services";
@@ -33,11 +32,11 @@ router.post("/", async (req, res) => {
 			difficulty,
 			durationInDays,
 			objectives,
-			sharedWith, // tableau d'IDs d'utilisateurs
-			isPublic, // booléen
+			sharedWith,
+			isPublic,
 		} = req.body;
 
-		const userId = req.query["user_id"]; // ou récupérez via l'authentification
+		const userId = req.query["user_id"];
 		if (!userId) {
 			return res.status(400).json({ erreur: "ID utilisateur requis" });
 		}
@@ -46,7 +45,6 @@ router.post("/", async (req, res) => {
 			return res.status(400).json({ erreur: "Champs obligatoires manquants" });
 		}
 
-		// Vérifier que l'utilisateur existe
 		const user = await UserModel.findById(userId);
 		if (!user) {
 			return res.status(404).json({ erreur: "Utilisateur non trouvé" });
@@ -67,7 +65,6 @@ router.post("/", async (req, res) => {
 
 		await challenge.save();
 
-		// ----------- LOGIQUE BADGE PREMIER DÉFI -----------
 		const nbDefis = await ChallengeModel.countDocuments({ createdBy: userId });
 		if (nbDefis === 1) {
 			const badge = await BadgeModel.findOne({ name: "Créateur de défi" });
@@ -79,7 +76,7 @@ router.post("/", async (req, res) => {
 				}
 			}
 		}
-		// ----------- LOGIQUE BADGE JOUER EN COMMUNAUTÉ -----------
+
 		if (Array.isArray(sharedWith) && sharedWith.length > 0) {
 			const badgeCommunity = await BadgeModel.findOne({
 				name: "Jouez en communauté",
@@ -94,7 +91,6 @@ router.post("/", async (req, res) => {
 				}
 			}
 		}
-		// ----------- FIN LOGIQUE BADGE -----------
 
 		res.status(201).json(challenge);
 	} catch (err) {
@@ -109,11 +105,9 @@ router.get("/owner", async (req, res) => {
 		if (!ownerId)
 			return res.status(400).json({ erreur: "ID du propriétaire requis" });
 
-		// Récupérer toutes les salles du propriétaire
 		const ownerGyms = await GymModel.find({ ownerId }, "_id");
 		const gymIds = ownerGyms.map((gym) => gym._id);
 
-		// Récupérer tous les défis liés aux salles du propriétaire
 		const challenges = await ChallengeModel.find({ gymIds: { $in: gymIds } })
 			.populate("gymIds", "name address")
 			.populate("exerciseTypeId", "name description targetedMuscles")
@@ -153,7 +147,6 @@ router.post("/owner", async (req, res) => {
 			return res.status(400).json({ erreur: "Champs obligatoires manquants" });
 		}
 
-		// Vérifier que toutes les salles appartiennent bien au propriétaire
 		const gyms = await GymModel.find({ _id: { $in: gymIds }, ownerId });
 		if (gyms.length !== gymIds.length) {
 			return res
@@ -161,7 +154,6 @@ router.post("/owner", async (req, res) => {
 				.json({ erreur: "Une ou plusieurs salles ne vous appartiennent pas" });
 		}
 
-		// Vérifier que toutes les salles sont approuvées
 		const unapprovedGyms = gyms.filter((gym) => !gym.isApproved);
 		if (unapprovedGyms.length > 0) {
 			return res.status(400).json({
@@ -184,7 +176,6 @@ router.post("/owner", async (req, res) => {
 		});
 		await challenge.save();
 
-		// Retourner le défi avec les informations des salles
 		const savedChallenge = await ChallengeModel.findById(challenge._id)
 			.populate("gymIds", "name")
 			.populate("exerciseTypeId", "name description targetedMuscles");
@@ -292,7 +283,6 @@ router.delete("/owner/:challengeId", async (req, res) => {
 			return res.status(400).json({ erreur: "ID du propriétaire requis" });
 		}
 
-		// Récupérer le défi et vérifier les permissions
 		const challenge = await ChallengeModel.findById(challengeId).populate(
 			"gymIds"
 		);
@@ -300,7 +290,6 @@ router.delete("/owner/:challengeId", async (req, res) => {
 			return res.status(404).json({ erreur: "Défi non trouvé" });
 		}
 
-		// Vérifier que toutes les salles appartiennent au propriétaire
 		const ownerGyms = await GymModel.find({
 			ownerId,
 			_id: { $in: challenge.gymIds },
@@ -314,19 +303,6 @@ router.delete("/owner/:challengeId", async (req, res) => {
 		await ChallengeModel.findByIdAndDelete(challengeId);
 
 		res.json({ message: `Défi "${challenge.title}" supprimé avec succès` });
-	} catch (err) {
-		res.status(400).json({ erreur: (err as Error).message });
-	}
-});
-
-// Récupérer les types d'exercices disponibles (pour le formulaire)
-router.get("/exercise-types", async (req, res) => {
-	try {
-		const exerciseTypes = await ExerciseTypeModel.find(
-			{},
-			"_id name description targetedMuscles"
-		);
-		res.json(exerciseTypes);
 	} catch (err) {
 		res.status(400).json({ erreur: (err as Error).message });
 	}

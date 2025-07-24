@@ -76,7 +76,7 @@ router.post("/login", async (req, res) => {
 			return res.status(400).json({ erreur: "Mot de passe incorrect." });
 		}
 
-		// token JWT
+		// Token JWT
 		const token = jwt.sign(
 			{ id: user._id, role: user.role },
 			process.env.JWT_SECRET as string,
@@ -132,14 +132,13 @@ router.get("/leaderboard", async (_req, res) => {
 			"firstname lastname score"
 		)
 			.sort({ score: -1 })
-			.limit(50); // top 50
+			.limit(50);
 		res.json(users);
 	} catch (err) {
 		res.status(500).json({ erreur: (err as Error).message });
 	}
 });
 
-// Récupérer un utilisateur par son id
 router.get("/:id", async (req, res) => {
 	try {
 		const user = await UserModel.findById(req.params.id);

@@ -14,7 +14,7 @@ export function badgeSchema(): Schema<Badge> {
 	return new Schema<Badge>({
 		name: { type: String, required: true },
 		description: { type: String, required: true },
-		image: { type: String, required: false }, // image optionnel
+		image: { type: String, required: false },
 		rule: ruleSchema,
 	});
 }

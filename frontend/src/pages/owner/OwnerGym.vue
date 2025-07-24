@@ -19,17 +19,14 @@
 		description: "",
 	});
 
-	// si l'owner a au moins une salle en attente de validation
 	const hasPendingGym = computed(() => {
 		return gyms.value.some((gym) => !gym.isApproved);
 	});
 
-	// si l'owner a atteint la limite de 4 salles
 	const hasReachedGymLimit = computed(() => {
 		return gyms.value.length >= 4;
 	});
 
-	// si on peut créer une nouvelle salle (pas de salle en attente ET limite non atteinte)
 	const canCreateNewGym = computed(() => {
 		return !hasPendingGym.value && !hasReachedGymLimit.value;
 	});
@@ -49,7 +46,6 @@
 			const gymsData = await res.json();
 			gyms.value = gymsData;
 
-			// Initialiser les formulaires d'édition pour chaque salle
 			initEditForms();
 		} catch (e) {
 			error.value = e.message;
@@ -76,14 +72,12 @@
 		});
 	};
 	const toggleEdit = (gymId) => {
-		// Empêcher l'édition si une salle est en attente
 		if (hasPendingGym.value) {
 			return;
 		}
 
 		editMode.value[gymId] = !editMode.value[gymId];
 
-		// Si on annule l'édition, restaurer les valeurs originales
 		if (!editMode.value[gymId]) {
 			cancelEdit(gymId);
 		}
@@ -107,7 +101,6 @@
 	};
 
 	const updateGym = async (gym) => {
-		// Empêcher la modification si une salle est en attente
 		if (hasPendingGym.value) {
 			error.value =
 				"Vous ne pouvez pas modifier vos salles tant qu'une salle est en attente de validation.";
@@ -172,7 +165,6 @@
 		}
 	};
 	const onCreate = async () => {
-		// Empêcher la création si une salle est en attente ou si la limite est atteinte
 		if (hasPendingGym.value) {
 			error.value =
 				"Vous ne pouvez pas créer de nouvelle salle tant qu'une salle est en attente de validation.";

@@ -53,6 +53,79 @@ Application web de gestion de salles de sport avec un backend Node.js/Express, u
 - Lancer le serveur : `npm run dev` dans `frontend`
 - Le frontend utilise Vue.js 3 + Tailwind CSS 
 
+- **Routes disponibles** :
+  - `/admin/gyms` : Gestion des salles d'entraînement (super admin)
+  - `/admin/badges` : Gestion des badges et récompenses (super admin)
+  - `/admin/users` : Gestion des utilisateurs (super admin)
+  - `/owner/gym` : Gestion des salles (propriétaire)
+  - `/owner/challenges` : Gestion des défis d'entraînement (propriétaire)
+  - `/login` : Connexion
+  - `/register` : Inscription
+
+---
+
+## API disponibles
+
+- **/api/gyms** (gestion des salles d'entraînement)
+- **/api/user** (authentification et gestion des propriétaires)
+- **/api/exercisetypes** (gestion des types d'exercices)
+- **/api/badges** (gestion des badges et récompenses - admin)
+- **/api/admin** (gestion administrative des utilisateurs)
+- **/api/challenges** (gestion des défis d'entraînement - owner)
+
+### Routes spécifiques
+#### Route de test (/api)
+- `GET /` : Vérifier que l'API fonctionne (retourne Hello world")
+
+#### Gestion des salles (/api/gyms)
+- `GET /` : Lister toutes les salles
+- `POST /` : Créer une nouvelle salle
+- `PUT /:id` : Modifier une salle
+- `DELETE /:id` : Supprimer une salle
+- `PATCH /:id/approve` : Approuver une salle
+- `PATCH /:id/assign` : Attribuer type d'exercice/difficulté/responsable
+- `GET /owner?owner_id=:ownerId` : Récupérer les salles d'un propriétaire
+- `POST /owner?owner_id=:ownerId` : Créer une salle pour un propriétaire
+- `PUT /owner/:gymId?owner_id=:ownerId` : Modifier une salle spécifique du propriétaire
+- `DELETE /owner/:gymId?owner_id=:ownerId` : Supprimer une salle spécifique du propriétaire
+
+#### Gestion des badges (/api/badges)
+- `GET /` : Lister tous les badges
+- `POST /` : Créer un nouveau badge
+- `PUT /:id` : Modifier un badge
+- `DELETE /:id` : Supprimer un badge
+
+#### Administration des utilisateurs (/api/admin)
+- `GET /users` : Lister tous les utilisateurs
+- `GET /users/:id/deletion-preview` : Prévisualiser les suppressions en cascade
+- `PATCH /users/:id/toggle-status` : Activer/désactiver un utilisateur
+- `PATCH /users/:id/role` : Modifier le rôle d'un utilisateur
+- `DELETE /users/:id` : Supprimer un utilisateur (avec cascade)
+- `POST /recalculate-scores` : Recalculer tous les scores des utilisateurs
+
+#### Types d'exercices (/api/exercisetypes)
+- `GET /` : Lister tous les types
+- `POST /` : Créer un nouveau type
+- `PUT /:id` : Modifier un type
+- `DELETE /:id` : Supprimer un type
+
+#### Gestion des défis (/api/challenges)
+- `GET /` : Lister tous les défis (avec données populées)
+- `POST /` : Créer un défi partageable (utilisateur)
+- `POST /complete/:challengeId?user_id=:userId` : Compléter un défi (utilisateur)
+- `GET /owner?ownerId=:ownerId` : Récupérer les défis d'un propriétaire via ses salles
+- `POST /owner?owner_id=:ownerId` : Créer un nouveau défi pour une salle du propriétaire
+- `PUT /owner/:challengeId?owner_id=:ownerId` : Modifier un défi existant (propriétaire uniquement)
+- `DELETE /owner/:challengeId?owner_id=:ownerId` : Supprimer un défi (propriétaire uniquement)
+
+#### Authentification et utilisateurs (/api/user)
+- `POST /register` : Inscription d'un nouvel utilisateur
+- `POST /login` : Connexion utilisateur (retourne un JWT, vérifie si le compte est actif)
+- `GET /owners` : Lister tous les utilisateurs avec le rôle "owner"
+- `GET /clients` : Lister tous les utilisateurs avec le rôle "client"
+- `GET /leaderboard` : Récupérer le classement général des membres par score
+- `GET /users/:id` : Récupérer un utilisateur par son id
+
 ---
 
 ## Journal des collections MongoDB (TSness)

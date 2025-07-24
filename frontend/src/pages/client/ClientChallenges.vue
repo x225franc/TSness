@@ -94,13 +94,13 @@
 		);
 	};
 
-	const loadExerciseTypes = async () => {
-		const res = await fetch(
-			window.config.BACKEND_URL + "/api/challenges/exercise-types"
-		);
-		if (!res.ok) throw new Error("Impossible de charger les types d'exercices");
-		exerciseTypes.value = await res.json();
-	};
+const loadExerciseTypes = async () => {
+  const res = await fetch(
+    window.config.BACKEND_URL + "/api/exercise-types"
+  );
+  if (!res.ok) throw new Error("Impossible de charger les types d'exercices");
+  exerciseTypes.value = await res.json();
+};
 
 	const loadUsers = async () => {
 		const res = await fetch(window.config.BACKEND_URL + "/api/user/clients");
