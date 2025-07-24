@@ -1,5 +1,5 @@
 import express from 'express';
-import { GymModel, ChallengeModel, ExerciseTypeModel, UserModel } from '../services/mongoose/services';
+import { GymModel, ChallengeModel, ExerciseTypeModel, UserModel, BadgeModel } from '../services/mongoose/services';
 import { ChallengeInput } from '../models';
 
 const router = express.Router();
@@ -14,6 +14,81 @@ router.get('/', async (req, res) => {
         res.json(challenges);
     } catch (err) {
         res.status(500).json({ erreur: (err as Error).message });
+    }
+});
+
+// Créer un défi par un utilisateur (partageable)
+router.post('/', async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            exerciseTypeId,
+            difficulty,
+            durationInDays,
+            objectives,
+            sharedWith, // tableau d'IDs d'utilisateurs
+            isPublic    // booléen
+        } = req.body;
+
+        const userId = req.query['user_id']; // ou récupérez via l'authentification
+        if (!userId) {
+            return res.status(400).json({ erreur: 'ID utilisateur requis' });
+        }
+
+        if (!title || !description || !durationInDays) {
+            return res.status(400).json({ erreur: 'Champs obligatoires manquants' });
+        }
+
+        // Vérifier que l'utilisateur existe
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ erreur: 'Utilisateur non trouvé' });
+        }
+
+        const challenge = new ChallengeModel({
+            title,
+            description,
+            createdBy: userId,
+            exerciseTypeId: exerciseTypeId || null,
+            difficulty,
+            durationInDays,
+            objectives: objectives || [],
+            sharedWith: Array.isArray(sharedWith) ? sharedWith : [],
+            isPublic: !!isPublic,
+            createdAt: new Date()
+        });
+
+        await challenge.save();
+
+        // ----------- LOGIQUE BADGE PREMIER DÉFI -----------
+        const nbDefis = await ChallengeModel.countDocuments({ createdBy: userId });
+        if (nbDefis === 1) {
+            const badge = await BadgeModel.findOne({ name: "Créateur de défi" });
+            if (badge) {
+                const hasBadge = user.badges.some((b: any) => b.name === badge.name);
+                if (!hasBadge) {
+                    user.badges.push(badge);
+                    await user.save();
+                }
+            }
+        }
+        // ----------- LOGIQUE BADGE JOUER EN COMMUNAUTÉ -----------
+        if (Array.isArray(sharedWith) && sharedWith.length > 0) {
+            const badgeCommunity = await BadgeModel.findOne({ name: "Jouez en communauté" });
+            if (badgeCommunity) {
+                const hasCommunityBadge = user.badges.some((b: any) => b.name === badgeCommunity.name);
+                if (!hasCommunityBadge) {
+                    user.badges.push(badgeCommunity);
+                    await user.save();
+                }
+            }
+        }
+        // ----------- FIN LOGIQUE BADGE -----------
+
+        res.status(201).json(challenge);
+    } catch (err) {
+        res.status(400).json({ erreur: (err as Error).message });
     }
 });
 

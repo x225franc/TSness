@@ -9,6 +9,8 @@ import Login from '@/pages/auth/Login.vue'
 import OwnerGym from '@/pages/owner/OwnerGym.vue'
 import OwnerChallenges from '@/pages/owner/OwnerChallenges.vue'
 import Client from '@/pages/client/Client.vue'
+import ClientBadges from '@/pages/client/ClientBadges.vue';
+import ClientChallenges from '@/pages/client/ClientChallenges.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -81,7 +83,21 @@ const router = createRouter({
       path: '/client',
       name: 'Client',
       component: Client,
-      meta: { title: 'Mon Compte', showheader: true, requiresAuth: true, role: 'client' }
+      meta: { title: 'Mon Compte', showheader: true, requiresAuth: true, role: 'client' },
+      children: [
+        {
+          path: '',
+          name: 'ClientChallenges',
+          component: ClientChallenges,
+          meta: { title: 'Défis Communauté', showheader: true, requiresAuth: true, role: 'client' }
+        },
+        {
+          path: 'badges',
+          name: 'ClientBadges',
+          component: ClientBadges,
+          meta: { title: 'Mes Badges', showheader: true, requiresAuth: true, role: 'client' }
+        }
+      ]
     },
     /////////////////////////////////////////////////////////////////////////
 

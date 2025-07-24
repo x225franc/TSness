@@ -28,6 +28,8 @@ export interface Challenge {
     durationInDays: number;
     objectives: [String];
     createdAt: Date;
+    sharedWith: Types.ObjectId[];
+    isPublic: boolean;
 }
 
 export interface ChallengeInput {

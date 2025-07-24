@@ -40,7 +40,9 @@ export function challengeSchema(): Schema<Challenge> {
             difficulty: { type: String, enum: ['facile', 'intermédiaire', 'difficile'] },
             durationInDays: { type: Number, required: true },
             objectives: [{ type: String }],
-            createdAt: { type: Date, default: Date.now }
+            createdAt: { type: Date, default: Date.now },
+            sharedWith: [{ type: Schema.Types.ObjectId, ref: 'User' }], 
+            isPublic: { type: Boolean, default: false }
         }
     );
 }
