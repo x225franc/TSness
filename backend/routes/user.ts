@@ -101,4 +101,25 @@ router.get('/owners', async (_req, res) => {
     }
 });
 
+// Récupérer tous les utilisateurs (clients)
+router.get('/clients', async (_req, res) => {
+    try {
+        const users = await UserModel.find({ role: 'client'}, '_id firstname lastname email role');
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ erreur: (err as Error).message });
+    }
+});
+
+// Récupérer un utilisateur par son id 
+router.get('/:id', async (req, res) => {
+    try {
+        const user = await UserModel.findById(req.params.id);
+        if (!user) return res.status(404).json({ erreur: 'Utilisateur non trouvé' });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ erreur: (err as Error).message });
+    }
+});
+
 export default router;
