@@ -111,6 +111,18 @@ router.get('/clients', async (_req, res) => {
     }
 });
 
+// Classement général des membres par score
+router.get('/leaderboard', async (_req, res) => {
+    try {
+        const users = await UserModel.find({ role: 'client' }, 'firstname lastname score')
+            .sort({ score: -1 })
+            .limit(50); // top 50
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ erreur: (err as Error).message });
+    }
+});
+
 // Récupérer un utilisateur par son id 
 router.get('/:id', async (req, res) => {
     try {

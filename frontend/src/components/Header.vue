@@ -83,6 +83,14 @@
 					<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
 					Mes Badges
 				</router-link>
+				<router-link
+					v-if="user.role === 'client'"
+					to="/client/leaderboard"
+					class="bg-green-100 hover:bg-green-200 text-green-700 font-semibold px-4 py-2 rounded-md shadow flex items-center gap-1"
+				>
+					<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3V2a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v1H3v4a5 5 0 0 0 4 4.9V15a3 3 0 0 0 3 3v2H7v2h10v-2h-3v-2a3 3 0 0 0 3-3v-3.1A5 5 0 0 0 21 7V3h-4zm-8 2V3h10v2h-2V3h-6v2H5zm12 2a3 3 0 0 1-2.24 2.9A1 1 0 0 0 15 9v6a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V9a1 1 0 0 0-.76-.97A3 3 0 0 1 5 7V5h14v2z"/></svg>
+					Classement
+				</router-link>
 				<!-- Déconnexion -->
 				<button
 					@click="logout"

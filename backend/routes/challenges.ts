@@ -294,34 +294,39 @@ router.post('/complete/:challengeId', async (req, res) => {
         const { challengeId } = req.params;
         const userId = req.query['user_id'];
 
-        // Vérifier si le challengeId est fourni
         if (!challengeId) {
             return res.status(400).json({ erreur: 'ID du défi requis' });
         }
-        // Vérifier que le challenge existe
         const challenge = await ChallengeModel.findById(challengeId);
         if (!challenge) {
             return res.status(404).json({ erreur: 'Défi non trouvé' });
         }
-
-        // Vérifier si le userId est fourni
         if (!userId) {
             return res.status(400).json({ erreur: 'ID de l\'utilisateur requis' });
         }
-        // Vérifier que l'utilisateur existe
         const user = await UserModel.findById(userId);
         if (!user) {
             return res.status(404).json({ erreur: 'Utilisateur non trouvé' });
         }
-
-        // Vérifier si le challenge estdéjà complété pour l'utilisateur
         if (user.challenges_completed && user.challenges_completed.includes(challenge._id)) {
             return res.status(400).json({ erreur: 'Challenge déjà complété' });
         }
-
         user.challenges_completed = user.challenges_completed || [];
         user.challenges_completed.push(challenge._id);
-        user.score = (user.score || 0) + 1;
+
+        // Attribution des points selon la difficulté
+        let points = 0;
+        if (challenge.difficulty === 'facile') points = 20;
+        else if (challenge.difficulty === 'intermédiaire') points = 40;
+        else if (challenge.difficulty === 'difficile') points = 70;
+        else points = 20; // défaut
+
+        // +10 points si l'utilisateur était invité (sharedWith)
+        if (Array.isArray(challenge.sharedWith) && challenge.sharedWith.includes(userId)) {
+            points += 10;
+        }
+
+        user.score = (user.score || 0) + points;
         await user.save();
 
         res.json({ message: 'Challenge complété avec succès', score: user.score });

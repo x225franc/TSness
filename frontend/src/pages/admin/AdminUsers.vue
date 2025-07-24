@@ -13,6 +13,9 @@
 	const showRoleModal = ref(false);
 	const selectedUser = ref(null);
 	const newRole = ref("");
+	const recalculating = ref(false);
+	const recalcSuccess = ref(false);
+	const recalcError = ref("");
 
 	// methodes
 	const fetchUsers = async () => {
@@ -197,6 +200,31 @@
 		}
 	};
 
+	const recalculateScores = async () => {
+		recalculating.value = true;
+		recalcSuccess.value = false;
+		recalcError.value = "";
+		try {
+			const res = await fetch(window.config.BACKEND_URL + "/api/admin/recalculate-scores", {
+				method: "POST"
+			});
+			if (!res.ok) {
+				const data = await res.json();
+				throw new Error(data.erreur || "Erreur lors du recalcul");
+			}
+			recalcSuccess.value = true;
+			successMessage.value = "Scores recalculés avec succès !";
+			await fetchUsers();
+			filterUsers();
+			setTimeout(() => { recalcSuccess.value = false; }, 3000);
+		} catch (e) {
+			recalcError.value = e.message;
+			setTimeout(() => { recalcError.value = ""; }, 4000);
+		} finally {
+			recalculating.value = false;
+		}
+	};
+
 	const getRoleLabel = (role) => {
 		const labels = {
 			client: "Client",
@@ -248,6 +276,15 @@
 				<p class="text-lg text-gray-600">
 					Administrez les comptes utilisateurs de la plateforme
 				</p>
+				<div class="mt-6 flex flex-col items-center gap-2">
+					<button @click="recalculateScores" :disabled="recalculating" class="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+						<svg v-if="!recalculating" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.3-.42 2.5-1.13 3.47l1.46 1.46A7.963 7.963 0 0020 12c0-4.42-3.58-8-8-8zm-6.87.13L3.13 5.59A7.963 7.963 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3c-3.31 0-6-2.69-6-6 0-1.3.42-2.5 1.13-3.47z"/></svg>
+						<svg v-else class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+						<span>Recalculer tous les scores</span>
+					</button>
+					<div v-if="recalcSuccess" class="text-green-700 text-sm font-semibold mt-1">Scores recalculés avec succès !</div>
+					<div v-if="recalcError" class="text-red-600 text-sm font-semibold mt-1">{{ recalcError }}</div>
+				</div>
 			</div>
 
 			<transition name="slide-down">
