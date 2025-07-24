@@ -25,7 +25,11 @@ const filters = ref({
   difficulty: '',
   exerciseTypeId: '',
 });
-const filterOrigin = ref('all'); // 'all', 'mine', 'community'
+const filterOrigin = ref('all'); // 'all', 'mine', 'community', 'shared', 'completed'
+
+const user = computed(() => JSON.parse(localStorage.getItem("user")));
+const userId = computed(() => user.value?.id);
+const userCompleted = ref([]);
 
 const filteredChallenges = computed(() => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -35,7 +39,11 @@ const filteredChallenges = computed(() => {
     if (filterOrigin.value === 'mine') {
       matchOrigin = challenge.createdBy && (challenge.createdBy._id === user.id || challenge.createdBy === user.id);
     } else if (filterOrigin.value === 'community') {
-      matchOrigin = challenge.isPublic && !(challenge.createdBy && (challenge.createdBy._id === user.id || challenge.createdBy === user.id));
+      matchOrigin = challenge.isPublic && !(challenge.createdBy && (challenge.createdBy._id === user.id || challenge.createdBy === user.id)); // inclut tous les défis publics, sauf ceux créés par moi
+    } else if (filterOrigin.value === 'shared') {
+      matchOrigin = Array.isArray(challenge.sharedWith) && challenge.sharedWith.includes(user.id);
+    } else if (filterOrigin.value === 'completed') {
+      matchOrigin = userCompleted.value.includes(challenge._id);
     }
     // Filtres existants
     const matchDifficulty = !filters.value.difficulty || challenge.difficulty === filters.value.difficulty;
@@ -61,14 +69,16 @@ const loadData = async () => {
 };
 
 const loadChallenges = async () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (!user || !user.id) throw new Error("Utilisateur non trouvé");
-  // Récupérer tous les défis publics + ceux créés par l'utilisateur
+  if (!userId.value) throw new Error("Utilisateur non trouvé");
   const res = await fetch(window.config.BACKEND_URL + `/api/challenges`);
   if (!res.ok) throw new Error("Impossible de charger les défis");
   const all = await res.json();
-  // On ne garde que les défis publics ou créés par l'utilisateur
-  allChallenges.value = all.filter(ch => ch.isPublic || (ch.createdBy && (ch.createdBy._id === user.id || ch.createdBy === user.id)));
+  // Défis publics, créés par moi, ou où je suis invité
+  allChallenges.value = all.filter(ch =>
+    ch.isPublic ||
+    (ch.createdBy && (ch.createdBy._id === userId.value || ch.createdBy === userId.value)) ||
+    (Array.isArray(ch.sharedWith) && ch.sharedWith.includes(userId.value))
+  );
 };
 
 const loadExerciseTypes = async () => {
@@ -92,6 +102,15 @@ const loadUserBadges = async () => {
   if (res.ok) {
     const data = await res.json();
     userBadges.value = data.badges || [];
+  }
+};
+
+const loadUserCompleted = async () => {
+  if (!userId.value) return;
+  const res = await fetch(window.config.BACKEND_URL + `/api/user/${userId.value}`);
+  if (res.ok) {
+    const data = await res.json();
+    userCompleted.value = data.challenges_completed || [];
   }
 };
 
@@ -155,6 +174,26 @@ const createChallenge = async () => {
   }
 };
 
+const completeChallenge = async (challengeId) => {
+  try {
+    const res = await fetch(window.config.BACKEND_URL + `/api/challenges/complete/${challengeId}?user_id=${userId.value}`, {
+      method: 'POST',
+    });
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.erreur || 'Erreur lors de la complétion');
+    }
+    await loadUserCompleted();
+    await loadChallenges();
+    success.value = true;
+    successMessage.value = 'Défi complété avec succès !';
+    setTimeout(() => { success.value = false; }, 3000);
+  } catch (e) {
+    error.value = e.message;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
+
 const formatDuration = (days) => {
   if (!days || days < 1) return "Moins d’un jour";
   if (days === 1) return "1 jour";
@@ -167,6 +206,7 @@ const formatDuration = (days) => {
 onMounted(async () => {
   await loadData();
   await loadUserBadges();
+  await loadUserCompleted();
 });
 </script>
 
@@ -328,6 +368,8 @@ onMounted(async () => {
               <button @click="filterOrigin = 'all'" :class="['px-3 py-1 rounded-full text-xs font-semibold transition', filterOrigin === 'all' ? 'bg-violet-600 text-white shadow' : 'bg-gray-100 text-gray-700']">Tous</button>
               <button @click="filterOrigin = 'mine'" :class="['px-3 py-1 rounded-full text-xs font-semibold transition', filterOrigin === 'mine' ? 'bg-violet-600 text-white shadow' : 'bg-gray-100 text-gray-700']">Mes défis</button>
               <button @click="filterOrigin = 'community'" :class="['px-3 py-1 rounded-full text-xs font-semibold transition', filterOrigin === 'community' ? 'bg-violet-600 text-white shadow' : 'bg-gray-100 text-gray-700']">Communauté</button>
+              <button @click="filterOrigin = 'shared'" :class="['px-3 py-1 rounded-full text-xs font-semibold transition', filterOrigin === 'shared' ? 'bg-violet-600 text-white shadow' : 'bg-gray-100 text-gray-700']">Partagés</button>
+              <button @click="filterOrigin = 'completed'" :class="['px-3 py-1 rounded-full text-xs font-semibold transition', filterOrigin === 'completed' ? 'bg-green-600 text-white shadow' : 'bg-gray-100 text-gray-700']">Terminés</button>
             </div>
             <div class="flex gap-2 items-center">
               <label class="text-xs font-semibold text-gray-700">Difficulté :</label>
@@ -410,6 +452,12 @@ onMounted(async () => {
                         {{ objective }}
                       </li>
                     </ul>
+                  </div>
+                  <div v-if="userId && !userCompleted.includes(challenge._id) && ((Array.isArray(challenge.sharedWith) && challenge.sharedWith.includes(userId)) || challenge.isPublic || (challenge.createdBy && (challenge.createdBy._id === userId || challenge.createdBy === userId)))" class="mt-3">
+                    <button @click="completeChallenge(challenge._id)" class="bg-green-600 hover:bg-green-700 text-white font-medium px-3 py-1.5 rounded shadow-sm transition-all duration-150 flex items-center gap-1 text-sm">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                      Compléter
+                    </button>
                   </div>
                 </div>
               </div>

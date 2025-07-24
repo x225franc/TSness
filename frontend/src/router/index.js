@@ -11,6 +11,7 @@ import OwnerChallenges from '@/pages/owner/OwnerChallenges.vue'
 import Client from '@/pages/client/Client.vue'
 import ClientBadges from '@/pages/client/ClientBadges.vue';
 import ClientChallenges from '@/pages/client/ClientChallenges.vue';
+import ClientLeaderboard from '@/pages/client/ClientLeaderboard.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -96,6 +97,12 @@ const router = createRouter({
           name: 'ClientBadges',
           component: ClientBadges,
           meta: { title: 'Mes Badges', showheader: true, requiresAuth: true, role: 'client' }
+        },
+        {
+          path: 'leaderboard',
+          name: 'ClientLeaderboard',
+          component: ClientLeaderboard,
+          meta: { title: 'Classement', showheader: true, requiresAuth: true, role: 'client' }
         }
       ]
     },

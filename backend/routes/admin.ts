@@ -1,5 +1,6 @@
 import express from 'express';
 import { UserModel, GymModel, ChallengeModel, NotificationModel, LeaderboardModel } from '../services/mongoose/services';
+import { recalculateScores } from '../scripts/recalculate_scores';
 
 const router = express.Router();
 
@@ -193,6 +194,16 @@ router.get('/users/:id/deletion-preview', async (req, res) => {
         preview.toDelete.friendRelations = friendsCount;
         
         res.json(preview);
+    } catch (err) {
+        res.status(500).json({ erreur: (err as Error).message });
+    }
+});
+
+// Lancer le recalcul des scores (admin)
+router.post('/recalculate-scores', async (_req, res) => {
+    try {
+        await recalculateScores();
+        res.json({ message: 'Scores recalculés avec succès.' });
     } catch (err) {
         res.status(500).json({ erreur: (err as Error).message });
     }
