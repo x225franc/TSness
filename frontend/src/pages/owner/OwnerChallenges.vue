@@ -4,7 +4,6 @@
 
 	const route = useRoute();
 
-	// variable
 	const loading = ref(true);
 	const challenges = ref([]);
 	const gyms = ref([]);
@@ -25,7 +24,6 @@
 		objectivesText: "",
 	});
 
-	// Computed properties
 	const approvedGyms = computed(() => {
 		return gyms.value.filter((gym) => gym.isApproved);
 	});
@@ -36,7 +34,6 @@
 			const user = JSON.parse(localStorage.getItem("user"));
 			if (!user || !user.id) throw new Error("Utilisateur non trouvé");
 
-			// Charger les salles, défis et types d'exercices en parallèle
 			await Promise.all([
 				loadGyms(user.id),
 				loadChallenges(user.id),
@@ -67,7 +64,7 @@
 		const res = await fetch(
 			window.config.BACKEND_URL + `/api/challenges/owner?owner_id=${ownerId}`
 		);
-		console.log(res)
+		console.log(res);
 		if (!res.ok) throw new Error("Impossible de charger les défis");
 		challenges.value = await res.json();
 	};
@@ -89,7 +86,9 @@
 			editForms.value[challenge._id] = {
 				title: challenge.title || "",
 				description: challenge.description || "",
-				gymIds: challenge.gymIds ? challenge.gymIds.map((gym) => gym._id || gym) : [],
+				gymIds: challenge.gymIds
+					? challenge.gymIds.map((gym) => gym._id || gym)
+					: [],
 				exerciseTypeId: challenge.exerciseTypeId?._id || "",
 				difficulty: challenge.difficulty || "facile",
 				durationInDays: challenge.durationInDays || 0,
@@ -112,7 +111,6 @@
 				throw new Error("Utilisateur non trouvé");
 			}
 
-			// Validation des salles sélectionnées
 			if (!createForm.value.gymIds || createForm.value.gymIds.length === 0) {
 				window.scrollTo({
 					top: 0,
@@ -121,7 +119,6 @@
 				throw new Error("Veuillez sélectionner au moins une salle");
 			}
 
-			// Validation de la durée
 			if (!createForm.value.durationInDays) {
 				window.scrollTo({
 					top: 0,
@@ -142,7 +139,7 @@
 				exerciseTypeId: createForm.value.exerciseTypeId || null,
 				difficulty: createForm.value.difficulty,
 				durationInDays: Number(createForm.value.durationInDays),
-				objectives
+				objectives,
 			};
 
 			const res = await fetch(
@@ -162,7 +159,6 @@
 			const newChallenge = await res.json();
 			challenges.value.unshift(newChallenge);
 
-			// Réinitialiser le formulaire
 			createForm.value = {
 				title: "",
 				description: "",
@@ -205,7 +201,9 @@
 			editForms.value[challengeId] = {
 				title: challenge.title || "",
 				description: challenge.description || "",
-				gymIds: challenge.gymIds ? challenge.gymIds.map((gym) => gym._id || gym) : [],
+				gymIds: challenge.gymIds
+					? challenge.gymIds.map((gym) => gym._id || gym)
+					: [],
 				exerciseTypeId: challenge.exerciseTypeId?._id || "",
 				difficulty: challenge.difficulty || "facile",
 				durationInDays: challenge.durationInDays || 0,
@@ -231,16 +229,17 @@
 			const payload = {
 				title: formData.title,
 				description: formData.description,
-				gymIds: formData.gymIds, // <-- Ajouté ici
+				gymIds: formData.gymIds,
 				exerciseTypeId: formData.exerciseTypeId || null,
 				difficulty: formData.difficulty,
 				durationInDays: Number(formData.durationInDays),
-				objectives
+				objectives,
 			};
-			console.log(payload)
+			console.log(payload);
 
 			const res = await fetch(
-				window.config.BACKEND_URL + `/api/challenges/owner/${challenge._id}?owner_id=${user.id}`,
+				window.config.BACKEND_URL +
+					`/api/challenges/owner/${challenge._id}?owner_id=${user.id}`,
 				{
 					method: "PUT",
 					headers: { "Content-Type": "application/json" },
@@ -292,9 +291,10 @@
 			if (!user || !user.id) throw new Error("Utilisateur non trouvé");
 
 			const res = await fetch(
-				window.config.BACKEND_URL + `/api/challenges/owner/${challenge._id}?owner_id=${user.id}`,
+				window.config.BACKEND_URL +
+					`/api/challenges/owner/${challenge._id}?owner_id=${user.id}`,
 				{
-					method: "DELETE"
+					method: "DELETE",
 				}
 			);
 
@@ -342,7 +342,6 @@
 		class="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 py-8"
 	>
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<!-- Header -->
 			<div class="text-center mb-8">
 				<h1 class="text-4xl font-bold text-gray-900 mb-2">
 					Mes Défis d'Entraînement
@@ -352,7 +351,6 @@
 				</p>
 			</div>
 
-			<!-- Loading State -->
 			<transition name="fade" mode="out-in">
 				<div v-if="loading" key="loading" class="text-center py-20">
 					<div
@@ -377,9 +375,7 @@
 					</p>
 				</div>
 
-				<!-- Content -->
 				<div v-else key="content">
-					<!-- Messages de statut -->
 					<transition name="slide-down">
 						<div v-if="success" class="mb-6">
 							<div
@@ -432,7 +428,6 @@
 						</div>
 					</transition>
 
-					<!-- Message si aucune salle approuvée -->
 					<div v-if="approvedGyms.length === 0" class="text-center py-12">
 						<div
 							class="bg-yellow-50 border border-yellow-200 rounded-xl p-8 max-w-md mx-auto"
@@ -471,9 +466,7 @@
 						</div>
 					</div>
 
-					<!-- Contenu principal -->
 					<div v-else>
-						<!-- Bouton d'ajout d'un nouveau défi -->
 						<div class="mb-8 text-center">
 							<button
 								@click="showCreateForm = !showCreateForm"
@@ -486,7 +479,6 @@
 							</button>
 						</div>
 
-						<!-- Formulaire de création -->
 						<transition name="fade" mode="out-in">
 							<div
 								v-if="showCreateForm"
@@ -634,7 +626,9 @@
 										</div>
 
 										<div>
-											<label class="block text-sm font-semibold text-gray-700 mb-2">
+											<label
+												class="block text-sm font-semibold text-gray-700 mb-2"
+											>
 												Durée du défi (en jours) *
 											</label>
 											<input
@@ -662,7 +656,7 @@
 													/>
 												</svg>
 												<span class="text-blue-700 font-medium">
-													Durée  :
+													Durée :
 													{{ formatDuration(createForm.durationInDays) }}
 												</span>
 											</div>
@@ -727,7 +721,6 @@
 							</div>
 						</transition>
 
-						<!-- Liste des défis existants -->
 						<transition name="fade" mode="out-in">
 							<div
 								v-if="!showCreateForm"
@@ -854,10 +847,8 @@
 											</div>
 										</div>
 
-										<!-- Contenu de la carte -->
 										<div class="p-6">
 											<div v-if="!editMode[challenge._id]">
-												<!-- Mode lecture -->
 												<div class="space-y-4">
 													<div
 														class="flex items-center gap-4 text-sm flex-wrap"
@@ -875,7 +866,6 @@
 															{{ challenge.difficulty }}
 														</span>
 
-														<!-- Affichage de la durée -->
 														<span
 															v-if="challenge.durationInDays"
 															class="flex items-center gap-1 text-gray-600"
@@ -944,7 +934,6 @@
 											</div>
 
 											<div v-else>
-												<!-- Mode édition -->
 												<form
 													@submit.prevent="updateChallenge(challenge)"
 													class="space-y-4"
@@ -995,7 +984,9 @@
 													</div>
 
 													<div>
-														<label class="block text-sm font-medium text-gray-700 mb-1">
+														<label
+															class="block text-sm font-medium text-gray-700 mb-1"
+														>
 															Durée (en jours)
 														</label>
 														<input
@@ -1079,7 +1070,6 @@
 </template>
 
 <style scoped>
-	/* Animations */
 	.fade-enter-active,
 	.fade-leave-active {
 		transition: all 0.5s ease;

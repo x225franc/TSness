@@ -1,10 +1,9 @@
 <script setup>
-	import { ref } from 'vue';
-	import { useRouter } from 'vue-router';
+	import { ref } from "vue";
+	import { useRouter } from "vue-router";
 
 	const router = useRouter();
 
-	// State réactif
 	const form = ref({
 		email: "",
 		password: "",
@@ -12,18 +11,14 @@
 	const message = ref("");
 	const success = ref(false);
 
-	// Méthodes
 	const onLogin = async () => {
 		message.value = "";
 		try {
-			const res = await fetch(
-				window.config.BACKEND_URL + "/api/user/login",
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(form.value),
-				}
-			);
+			const res = await fetch(window.config.BACKEND_URL + "/api/user/login", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(form.value),
+			});
 			const data = await res.json();
 			if (res.ok) {
 				success.value = true;
@@ -32,7 +27,7 @@
 					localStorage.setItem("jwt_token", data.token);
 					localStorage.setItem("user", JSON.stringify(data.user));
 				}
-				router.push("/"); // Rediriger vers la page d'accueil
+				router.push("/");
 			} else {
 				success.value = false;
 				message.value = data.erreur || "Erreur lors de la connexion.";

@@ -11,10 +11,11 @@ import OwnerChallenges from '@/pages/owner/OwnerChallenges.vue'
 import Client from '@/pages/client/Client.vue'
 import ClientBadges from '@/pages/client/ClientBadges.vue';
 import ClientChallenges from '@/pages/client/ClientChallenges.vue';
+import ClientLeaderboard from '@/pages/client/ClientLeaderboard.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  ////////////////////////////////////  common routes /////////////////////////
+  ////////////////////////////////////  routes /////////////////////////
   routes: [
     {
       path: '/',
@@ -63,7 +64,7 @@ const router = createRouter({
     },
     /////////////////////////////////////////////////////////////////////////
     
-    //////////////////////////////////// Owner routes /////////////////////////
+    //////////////////////////////////// Owner  /////////////////////////
     {
       path: '/owner/gym',
       name: 'OwnerGym',
@@ -78,7 +79,7 @@ const router = createRouter({
     },
     /////////////////////////////////////////////////////////////////////////
 
-    //////////////////////////////////// Client routes /////////////////////////
+    //////////////////////////////////// Client  /////////////////////////
     {
       path: '/client',
       name: 'Client',
@@ -96,6 +97,12 @@ const router = createRouter({
           name: 'ClientBadges',
           component: ClientBadges,
           meta: { title: 'Mes Badges', showheader: true, requiresAuth: true, role: 'client' }
+        },
+        {
+          path: 'leaderboard',
+          name: 'ClientLeaderboard',
+          component: ClientLeaderboard,
+          meta: { title: 'Classement', showheader: true, requiresAuth: true, role: 'client' }
         }
       ]
     },
@@ -108,15 +115,15 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
-  // 1. Authentification requise ?
+  // Authentification requise 
   if (to.meta.requiresAuth && !user) {
     return next('/');
   }
-  // 2. Rôle requis ?
+  // Rôle requis 
   if (to.meta.role && (!user || user.role !== to.meta.role)) {
     return next('/');
   }
-  // 3. Page réservée aux invités ?
+  // invités 
   if (to.meta.guest && user) {
     return next('/');
   }

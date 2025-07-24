@@ -34,17 +34,17 @@ d'entraînement populaires, etc. -->
 
 <!-- -> permet d'augmenter le score d'utilisateur client. -->
 
-Coté utilisateur client:
+<!-- Coté utilisateur client:
 Création et Partage de Défis : Les utilisateurs peuvent créer et partager des défis d'entraînement physique avec d'autres membres de la communauté. Chaque défi peut inclure des objectifs spécifiques, des exercices recommandés, et une durée définie.
 
-Exploration des Défis : Les membres peuvent explorer une variété de défis d'entraînement physique créés par d'autres utilisateurs. Ils peuvent filtrer les défis en fonction de la difficulté, du type d'exercice, et de la durée.
+Exploration des Défis : Les membres peuvent explorer une variété de défis d'entraînement physique créés par d'autres utilisateurs. Ils peuvent filtrer les défis en fonction de la difficulté, du type d'exercice, et de la durée. -->
 
 Suivi de l'Entraînement : Les utilisateurs peuvent suivre leur progression dans les défis enregistrant leurs
 séances d'entraînement, le nombre de calories brûlées, et d'autres statistiques pertinentes.
 
-Défis Sociaux : Les membres peuvent inviter leurs amis et leur réseau à rejoindre des défis collaboratifs. Ils
+<!-- Défis Sociaux : Les membres peuvent inviter leurs amis et leur réseau à rejoindre des défis collaboratifs. Ils
 peuvent également défier d'autres utilisateurs à rejoindre et à compléter les défis ensemble.
 
 Récompenses et Badges : Les participants qui réussissent les défis peuvent recevoir des récompenses
 virtuelles et des badges pour leur accomplissement. Les classements des utilisateurs les plus actifs sont
-également affichés.
+également affichés. -->

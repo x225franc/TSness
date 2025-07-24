@@ -1,7 +1,6 @@
 <script setup>
 	import { ref, onMounted } from "vue";
 
-	// variable
 	const users = ref([]);
 	const filteredUsers = ref([]);
 	const success = ref(false);
@@ -13,8 +12,10 @@
 	const showRoleModal = ref(false);
 	const selectedUser = ref(null);
 	const newRole = ref("");
+	const recalculating = ref(false);
+	const recalcSuccess = ref(false);
+	const recalcError = ref("");
 
-	// methodes
 	const fetchUsers = async () => {
 		try {
 			const res = await fetch(window.config.BACKEND_URL + "/api/admin/users");
@@ -28,18 +29,15 @@
 	const filterUsers = () => {
 		let filtered = [...users.value];
 
-		// Filtre par rôle
 		if (selectedRole.value) {
 			filtered = filtered.filter((user) => user.role === selectedRole.value);
 		}
 
-		// Filtre par statut
 		if (selectedStatus.value) {
 			const isActive = selectedStatus.value === "active";
 			filtered = filtered.filter((user) => user.isActive === isActive);
 		}
 
-		// Filtre par recherche
 		if (searchTerm.value) {
 			const search = searchTerm.value.toLowerCase();
 			filtered = filtered.filter(
@@ -128,7 +126,6 @@
 
 	const deleteUser = async (user) => {
 		try {
-			// D'abord, récupérer la prévisualisation de suppression
 			const previewRes = await fetch(
 				window.config.BACKEND_URL +
 					`/api/admin/users/${user._id}/deletion-preview`
@@ -143,7 +140,6 @@
 
 			const preview = await previewRes.json();
 
-			// Construire le message d'avertissement détaillé
 			let warningMessage = `⚠️ SUPPRESSION DÉFINITIVE ⚠️\n\n`;
 			warningMessage += `Utilisateur: ${preview.user.name} (${preview.user.email})\n`;
 			warningMessage += `Rôle: ${preview.user.role}\n\n`;
@@ -169,7 +165,6 @@
 			warningMessage += `Êtes-vous absolument sûr(e) de vouloir continuer ?`;
 
 			if (confirm(warningMessage)) {
-				// Procéder à la suppression
 				const res = await fetch(
 					window.config.BACKEND_URL + `/api/admin/users/${user._id}`,
 					{
@@ -194,6 +189,38 @@
 			}
 		} catch (e) {
 			error.value = "Erreur lors de la suppression: " + e.message;
+		}
+	};
+
+	const recalculateScores = async () => {
+		recalculating.value = true;
+		recalcSuccess.value = false;
+		recalcError.value = "";
+		try {
+			const res = await fetch(
+				window.config.BACKEND_URL + "/api/admin/recalculate-scores",
+				{
+					method: "POST",
+				}
+			);
+			if (!res.ok) {
+				const data = await res.json();
+				throw new Error(data.erreur || "Erreur lors du recalcul");
+			}
+			recalcSuccess.value = true;
+			successMessage.value = "Scores recalculés avec succès !";
+			await fetchUsers();
+			filterUsers();
+			setTimeout(() => {
+				recalcSuccess.value = false;
+			}, 3000);
+		} catch (e) {
+			recalcError.value = e.message;
+			setTimeout(() => {
+				recalcError.value = "";
+			}, 4000);
+		} finally {
+			recalculating.value = false;
 		}
 	};
 
@@ -229,7 +256,6 @@
 		return new Date(dateString).toLocaleDateString("fr-FR");
 	};
 
-	
 	onMounted(async () => {
 		await fetchUsers();
 	});
@@ -240,7 +266,6 @@
 		class="min-h-screen bg-gradient-to-br from-green-50 via-white to-indigo-50 py-8"
 	>
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<!-- Header -->
 			<div class="text-center mb-8">
 				<h1 class="text-4xl font-bold text-gray-900 mb-2">
 					Gestion des Utilisateurs
@@ -248,6 +273,57 @@
 				<p class="text-lg text-gray-600">
 					Administrez les comptes utilisateurs de la plateforme
 				</p>
+				<div class="mt-6 flex flex-col items-center gap-2">
+					<button
+						@click="recalculateScores"
+						:disabled="recalculating"
+						class="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+					>
+						<svg
+							v-if="!recalculating"
+							class="w-5 h-5"
+							fill="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.3-.42 2.5-1.13 3.47l1.46 1.46A7.963 7.963 0 0020 12c0-4.42-3.58-8-8-8zm-6.87.13L3.13 5.59A7.963 7.963 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3c-3.31 0-6-2.69-6-6 0-1.3.42-2.5 1.13-3.47z"
+							/>
+						</svg>
+						<svg
+							v-else
+							class="w-5 h-5 animate-spin"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<circle
+								class="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								stroke-width="4"
+							/>
+							<path
+								class="opacity-75"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8v8z"
+							/>
+						</svg>
+						<span>Recalculer tous les scores</span>
+					</button>
+					<div
+						v-if="recalcSuccess"
+						class="text-green-700 text-sm font-semibold mt-1"
+					>
+						Scores recalculés avec succès !
+					</div>
+					<div
+						v-if="recalcError"
+						class="text-red-600 text-sm font-semibold mt-1"
+					>
+						{{ recalcError }}
+					</div>
+				</div>
 			</div>
 
 			<transition name="slide-down">
@@ -300,7 +376,6 @@
 				</div>
 			</transition>
 
-			<!-- Filtres -->
 			<div
 				class="bg-white shadow-lg rounded-2xl mb-8 p-6 border border-gray-200"
 			>
@@ -349,7 +424,6 @@
 				</div>
 			</div>
 
-			<!-- Statistiques -->
 			<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 				<div
 					class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500"
@@ -449,7 +523,6 @@
 				</div>
 			</div>
 
-			<!-- Liste des utilisateurs -->
 			<div
 				class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200"
 			>
@@ -504,7 +577,6 @@
 							:key="user._id"
 							class="group bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
 						>
-							<!-- Header de la carte utilisateur -->
 							<div :class="['p-4 text-white', getRoleGradient(user.role)]">
 								<div class="flex items-center justify-between">
 									<div>
@@ -536,7 +608,6 @@
 								</div>
 							</div>
 
-							<!-- Corps de la carte -->
 							<div class="p-4">
 								<div class="space-y-2 mb-4">
 									<div class="flex items-center text-sm text-gray-600">
@@ -563,7 +634,6 @@
 									</div>
 								</div>
 
-								<!-- Actions -->
 								<div class="flex gap-2">
 									<button
 										@click="toggleUserStatus(user)"
@@ -644,7 +714,6 @@
 			</div>
 		</div>
 
-		<!-- Modal de changement de rôle -->
 		<div
 			v-if="showRoleModal"
 			class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
@@ -698,7 +767,6 @@
 </template>
 
 <style scoped>
-	/* Animations */
 	.slide-down-enter-active {
 		transition: all 0.3s ease-out;
 	}
@@ -729,7 +797,6 @@
 		}
 	}
 
-	/* Hover effects */
 	.group:hover {
 		transform: translateY(-2px);
 	}

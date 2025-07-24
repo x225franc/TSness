@@ -1,27 +1,26 @@
 <script setup>
-	import { ref } from 'vue'
+	import { ref } from "vue";
 
-	// variable
 	const form = ref({
 		firstname: "",
 		lastname: "",
 		email: "",
 		password: "",
 		role: "client",
-	})
-	const message = ref("")
-	const success = ref(false)
+	});
+	const message = ref("");
+	const success = ref(false);
 
-	// methodes
 	const onRegister = async () => {
-		message.value = ""
-		// Validation du mot de passe côté client
-		const pwd = form.value.password
-		const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/
+		message.value = "";
+		const pwd = form.value.password;
+		const pwdRegex =
+			/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 		if (!pwdRegex.test(pwd)) {
-			success.value = false
-			message.value = "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial."
-			return
+			success.value = false;
+			message.value =
+				"Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial.";
+			return;
 		}
 		try {
 			const res = await fetch(
@@ -31,28 +30,28 @@
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify(form.value),
 				}
-			)
-			const data = await res.json()
+			);
+			const data = await res.json();
 			if (res.ok) {
-				success.value = true
+				success.value = true;
 				message.value =
-					"Inscription réussie. Vous pouvez maintenant vous connecter."
+					"Inscription réussie. Vous pouvez maintenant vous connecter.";
 				form.value = {
 					firstname: "",
 					lastname: "",
 					email: "",
 					password: "",
 					role: "client",
-				}
+				};
 			} else {
-				success.value = false
-				message.value = data.erreur || "Erreur lors de l'inscription."
+				success.value = false;
+				message.value = data.erreur || "Erreur lors de l'inscription.";
 			}
 		} catch (e) {
-			success.value = false
-			message.value = "Erreur réseau."
+			success.value = false;
+			message.value = "Erreur réseau.";
 		}
-	}
+	};
 </script>
 
 <template>

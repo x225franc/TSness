@@ -1,158 +1,10 @@
 <script setup>
+	import { ref, onMounted } from "vue";
 
-import { ref, onMounted } from 'vue';
-
-// variable
-const gyms = ref([]);
-const owners = ref([]);
-const exerciseTypes = ref([]);
-const form = ref({
-	_id: null,
-	name: "",
-	capacity: "",
-	equipments: "",
-	activities: "",
-	address: "",
-	contact: "",
-	description: "",
-	ownerId: "",
-	exerciseTypeId: "",
-	difficulty: "",
-});
-const showTypeForm = ref(false);
-const typeForm = ref({ 
-	_id: "", 
-	name: "", 
-	description: "", 
-	targetedMuscles: "" 
-});
-const assignStatus = ref({});
-const showAssignModal = ref(false);
-const assignModalGym = ref(null);
-const assignModalForm = ref({ 
-	ownerId: "", 
-	exerciseTypeId: "", 
-	difficulty: "" 
-});
-
-// methodes
-const fetchGyms = async () => {
-	const res = await fetch(window.config.BACKEND_URL + "/api/gyms");
-	gyms.value = await res.json();
-};
-
-const fetchOwners = async () => {
-	const res = await fetch(window.config.BACKEND_URL + "/api/user/owners");
-	owners.value = await res.json();
-};
-
-const fetchExerciseTypes = async () => {
-	const res = await fetch(window.config.BACKEND_URL + "/api/exercisetypes");
-	exerciseTypes.value = await res.json();
-};
-const onSubmit = async () => {
-	// Préparer le payload sans les champs à supprimer
-	const payload = {
-		name: form.value.name,
-		capacity: form.value.capacity,
-		equipments: form.value.equipments
-			.split(",")
-			.map((e) => e.trim())
-			.filter(Boolean),
-		activities: form.value.activities
-			.split(",")
-			.map((a) => a.trim())
-			.filter(Boolean),
-		address: form.value.address,
-		contact: form.value.contact,
-		description: form.value.description,
-	};
-	
-	if (
-		form.value.ownerId &&
-		owners.value.find((o) => o._id === form.value.ownerId)
-	) {
-		payload.ownerId = form.value.ownerId;
-	}
-	if (form.value.exerciseTypeId) {
-		payload.exerciseTypeId = form.value.exerciseTypeId;
-	}
-	if (form.value.difficulty) {
-		payload.difficulty = form.value.difficulty;
-	}
-	
-	const unset = {};
-	if (!form.value.ownerId) unset.ownerId = "";
-	if (!form.value.exerciseTypeId) unset.exerciseTypeId = "";
-	if (!form.value.difficulty) unset.difficulty = "";
-	
-	const finalPayload = Object.keys(unset).length
-		? { ...payload, $unset: unset }
-		: payload;
-		
-	if (form.value._id) {
-		await fetch(
-			window.config.BACKEND_URL + `/api/gyms/${form.value._id}`,
-			{
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(finalPayload),
-			}
-		);
-	} else {
-		await fetch(window.config.BACKEND_URL + "/api/gyms", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(payload),
-		});
-	}
-	resetForm();
-	fetchGyms();
-};
-const editGym = (gym) => {
-	form.value = {
-		_id: gym._id,
-		name: gym.name,
-		capacity: gym.capacity,
-		equipments: gym.equipments?.join(", ") || "",
-		activities: gym.activities?.join(", ") || "",
-		address: gym.address,
-		contact: gym.contact,
-		description: gym.description,
-		ownerId:
-			gym.ownerId && owners.value.some((o) => o._id === gym.ownerId)
-				? gym.ownerId
-				: "",
-		exerciseTypeId: gym.exerciseTypeId || "",
-		difficulty: gym.difficulty || "",
-	};
-
-	// Scroll automatique vers le haut
-	window.scrollTo({
-		top: 0,
-		behavior: "smooth",
-	});
-};
-
-const deleteGym = async (gym) => {
-	if (confirm("Supprimer cette salle ?")) {
-		await fetch(window.config.BACKEND_URL + `/api/gyms/${gym._id}`, {
-			method: "DELETE",
-		});
-		fetchGyms();
-	}
-};
-
-const approveGym = async (gym) => {
-	await fetch(
-		window.config.BACKEND_URL + `/api/gyms/${gym._id}/approve`,
-		{ method: "PATCH" }
-	);
-	fetchGyms();
-};
-
-const resetForm = () => {
-	form.value = {
+	const gyms = ref([]);
+	const owners = ref([]);
+	const exerciseTypes = ref([]);
+	const form = ref({
 		_id: null,
 		name: "",
 		capacity: "",
@@ -164,218 +16,354 @@ const resetForm = () => {
 		ownerId: "",
 		exerciseTypeId: "",
 		difficulty: "",
-	};
-};
-const onTypeSubmit = async () => {
-	const targetedMusclesArray = typeForm.value.targetedMuscles
-		.split(",")
-		.map((muscle) => muscle.trim())
-		.filter(Boolean);
+	});
+	const showTypeForm = ref(false);
+	const typeForm = ref({
+		_id: "",
+		name: "",
+		description: "",
+		targetedMuscles: "",
+	});
+	const assignStatus = ref({});
+	const showAssignModal = ref(false);
+	const assignModalGym = ref(null);
+	const assignModalForm = ref({
+		ownerId: "",
+		exerciseTypeId: "",
+		difficulty: "",
+	});
 
-	if (typeForm.value._id) {
-		await fetch(
-			window.config.BACKEND_URL + `/api/exercisetypes/${typeForm.value._id}`,
-			{
+	const fetchGyms = async () => {
+		const res = await fetch(window.config.BACKEND_URL + "/api/gyms");
+		gyms.value = await res.json();
+	};
+
+	const fetchOwners = async () => {
+		const res = await fetch(window.config.BACKEND_URL + "/api/user/owners");
+		owners.value = await res.json();
+	};
+
+	const fetchExerciseTypes = async () => {
+		const res = await fetch(window.config.BACKEND_URL + "/api/exercisetypes");
+		exerciseTypes.value = await res.json();
+	};
+	const onSubmit = async () => {
+		const payload = {
+			name: form.value.name,
+			capacity: form.value.capacity,
+			equipments: form.value.equipments
+				.split(",")
+				.map((e) => e.trim())
+				.filter(Boolean),
+			activities: form.value.activities
+				.split(",")
+				.map((a) => a.trim())
+				.filter(Boolean),
+			address: form.value.address,
+			contact: form.value.contact,
+			description: form.value.description,
+		};
+
+		if (
+			form.value.ownerId &&
+			owners.value.find((o) => o._id === form.value.ownerId)
+		) {
+			payload.ownerId = form.value.ownerId;
+		}
+		if (form.value.exerciseTypeId) {
+			payload.exerciseTypeId = form.value.exerciseTypeId;
+		}
+		if (form.value.difficulty) {
+			payload.difficulty = form.value.difficulty;
+		}
+
+		const unset = {};
+		if (!form.value.ownerId) unset.ownerId = "";
+		if (!form.value.exerciseTypeId) unset.exerciseTypeId = "";
+		if (!form.value.difficulty) unset.difficulty = "";
+
+		const finalPayload = Object.keys(unset).length
+			? { ...payload, $unset: unset }
+			: payload;
+
+		if (form.value._id) {
+			await fetch(window.config.BACKEND_URL + `/api/gyms/${form.value._id}`, {
 				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(finalPayload),
+			});
+		} else {
+			await fetch(window.config.BACKEND_URL + "/api/gyms", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(payload),
+			});
+		}
+		resetForm();
+		fetchGyms();
+	};
+	const editGym = (gym) => {
+		form.value = {
+			_id: gym._id,
+			name: gym.name,
+			capacity: gym.capacity,
+			equipments: gym.equipments?.join(", ") || "",
+			activities: gym.activities?.join(", ") || "",
+			address: gym.address,
+			contact: gym.contact,
+			description: gym.description,
+			ownerId:
+				gym.ownerId && owners.value.some((o) => o._id === gym.ownerId)
+					? gym.ownerId
+					: "",
+			exerciseTypeId: gym.exerciseTypeId || "",
+			difficulty: gym.difficulty || "",
+		};
+
+		window.scrollTo({
+			top: 0,
+			behavior: "smooth",
+		});
+	};
+
+	const deleteGym = async (gym) => {
+		if (confirm("Supprimer cette salle ?")) {
+			await fetch(window.config.BACKEND_URL + `/api/gyms/${gym._id}`, {
+				method: "DELETE",
+			});
+			fetchGyms();
+		}
+	};
+
+	const approveGym = async (gym) => {
+		await fetch(window.config.BACKEND_URL + `/api/gyms/${gym._id}/approve`, {
+			method: "PATCH",
+		});
+		fetchGyms();
+	};
+
+	const resetForm = () => {
+		form.value = {
+			_id: null,
+			name: "",
+			capacity: "",
+			equipments: "",
+			activities: "",
+			address: "",
+			contact: "",
+			description: "",
+			ownerId: "",
+			exerciseTypeId: "",
+			difficulty: "",
+		};
+	};
+	const onTypeSubmit = async () => {
+		const targetedMusclesArray = typeForm.value.targetedMuscles
+			.split(",")
+			.map((muscle) => muscle.trim())
+			.filter(Boolean);
+
+		if (typeForm.value._id) {
+			await fetch(
+				window.config.BACKEND_URL + `/api/exercisetypes/${typeForm.value._id}`,
+				{
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						name: typeForm.value.name,
+						description: typeForm.value.description,
+						targetedMuscles: targetedMusclesArray,
+					}),
+				}
+			);
+		} else {
+			await fetch(window.config.BACKEND_URL + "/api/exercisetypes", {
+				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					name: typeForm.value.name,
 					description: typeForm.value.description,
 					targetedMuscles: targetedMusclesArray,
 				}),
+			});
+		}
+
+		typeForm.value = {
+			_id: "",
+			name: "",
+			description: "",
+			targetedMuscles: "",
+		};
+		showTypeForm.value = false;
+		fetchExerciseTypes();
+	};
+	const editType = (type) => {
+		typeForm.value = {
+			_id: type._id,
+			name: type.name,
+			description: type.description || "",
+			targetedMuscles: (type.targetedMuscles || []).join(", "),
+		};
+		showTypeForm.value = true;
+	};
+	const deleteType = async (type) => {
+		const linkedGyms = gyms.value.filter(
+			(gym) => gym.exerciseTypeId === type._id
+		);
+
+		if (linkedGyms.length > 0) {
+			const gymNames = linkedGyms.map((gym) => gym.name).join(", ");
+			alert(
+				`Impossible de supprimer ce type d'exercice.\n\nIl est actuellement assigné à ${linkedGyms.length} salle(s) :\n${gymNames}\n\nVeuillez d'abord désassigner ce type des salles concernées.`
+			);
+			return;
+		}
+
+		if (confirm("Supprimer ce type d'exercice ?")) {
+			try {
+				const res = await fetch(
+					window.config.BACKEND_URL + `/api/exercisetypes/${type._id}`,
+					{ method: "DELETE" }
+				);
+
+				if (res.ok) {
+					fetchExerciseTypes();
+				} else {
+					const error = await res.json();
+					alert(
+						`Erreur lors de la suppression : ${
+							error.erreur || "Erreur inconnue"
+						}`
+					);
+				}
+			} catch (error) {
+				alert(`Erreur lors de la suppression : ${error.message}`);
 			}
-		);
-	} else {
-		await fetch(window.config.BACKEND_URL + "/api/exercisetypes", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				name: typeForm.value.name,
-				description: typeForm.value.description,
-				targetedMuscles: targetedMusclesArray,
-			}),
-		});
-	}
-	
-	typeForm.value = {
-		_id: "",
-		name: "",
-		description: "",
-		targetedMuscles: "",
+		}
 	};
-	showTypeForm.value = false;
-	fetchExerciseTypes();
-};
-const editType = (type) => {
-	typeForm.value = {
-		_id: type._id,
-		name: type.name,
-		description: type.description || "",
-		targetedMuscles: (type.targetedMuscles || []).join(", "),
-	};
-	showTypeForm.value = true;
-};
-const deleteType = async (type) => {
-	// Vérifier si le type d'exercice est lié à une salle
-	const linkedGyms = gyms.value.filter(
-		(gym) => gym.exerciseTypeId === type._id
-	);
+	const assignTypeDifficulty = async (gym) => {
+		const payload = {
+			exerciseTypeId: gym._assignExerciseTypeId || gym.exerciseTypeId || "",
+			difficulty: gym._assignDifficulty || gym.difficulty || "",
+		};
 
-	if (linkedGyms.length > 0) {
-		const gymNames = linkedGyms.map((gym) => gym.name).join(", ");
-		alert(
-			`Impossible de supprimer ce type d'exercice.\n\nIl est actuellement assigné à ${linkedGyms.length} salle(s) :\n${gymNames}\n\nVeuillez d'abord désassigner ce type des salles concernées.`
-		);
-		return;
-	}
-
-	if (confirm("Supprimer ce type d'exercice ?")) {
 		try {
 			const res = await fetch(
-				window.config.BACKEND_URL + `/api/exercisetypes/${type._id}`,
-				{ method: "DELETE" }
+				window.config.BACKEND_URL + `/api/gyms/${gym._id}/assign`,
+				{
+					method: "PATCH",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(payload),
+				}
 			);
-
 			if (res.ok) {
-				fetchExerciseTypes();
+				assignStatus.value = { ...assignStatus.value, [gym._id]: "success" };
+				fetchGyms();
 			} else {
-				const error = await res.json();
-				alert(
-					`Erreur lors de la suppression : ${
-						error.erreur || "Erreur inconnue"
-					}`
-				);
+				assignStatus.value = { ...assignStatus.value, [gym._id]: "error" };
 			}
-		} catch (error) {
-			alert(`Erreur lors de la suppression : ${error.message}`);
-		}
-	}
-};
-const assignTypeDifficulty = async (gym) => {
-	const payload = {
-		exerciseTypeId: gym._assignExerciseTypeId || gym.exerciseTypeId || "",
-		difficulty: gym._assignDifficulty || gym.difficulty || "",
-	};
-	
-	try {
-		const res = await fetch(
-			window.config.BACKEND_URL + `/api/gyms/${gym._id}/assign`,
-			{
-				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(payload),
-			}
-		);
-		if (res.ok) {
-			assignStatus.value = { ...assignStatus.value, [gym._id]: "success" };
-			fetchGyms();
-		} else {
+		} catch (e) {
 			assignStatus.value = { ...assignStatus.value, [gym._id]: "error" };
 		}
-	} catch (e) {
-		assignStatus.value = { ...assignStatus.value, [gym._id]: "error" };
-	}
-	
-	setTimeout(() => {
-		assignStatus.value = { ...assignStatus.value, [gym._id]: null };
-	}, 2000);
-};
-const openAssignModal = (gym) => {
-	assignModalGym.value = gym;
-				let ownerId = gym.ownerId;
-				if (!ownerId || !owners.value.some((o) => o._id === ownerId))
-					ownerId = "";
-				assignModalForm.value = {
-					ownerId,
-					exerciseTypeId: gym.exerciseTypeId || "",
-					difficulty: gym.difficulty || "",
-				};
-				showAssignModal.value = true;
-};
 
-const saveAssignModal = async () => {
-	if (!assignModalGym.value) return;
-	const payload = {};
-	if (
-		assignModalForm.value.ownerId &&
-		owners.value.find((o) => o._id === assignModalForm.value.ownerId)
-	) {
-		payload.ownerId = assignModalForm.value.ownerId;
-	}
-	if (assignModalForm.value.exerciseTypeId) {
-		payload.exerciseTypeId = assignModalForm.value.exerciseTypeId;
-	}
-	if (assignModalForm.value.difficulty) {
-		payload.difficulty = assignModalForm.value.difficulty;
-	}
-	const unset = {};
-	if (!assignModalForm.value.ownerId) unset.ownerId = "";
-	if (!assignModalForm.value.exerciseTypeId) unset.exerciseTypeId = "";
-	if (!assignModalForm.value.difficulty) unset.difficulty = "";
-	const finalPayload = Object.keys(unset).length
-		? { ...payload, $unset: unset }
-		: payload;
-	try {
-		const res = await fetch(
-			window.config.BACKEND_URL +
-				`/api/gyms/${assignModalGym.value._id}/assign`,
-			{
-				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(finalPayload),
+		setTimeout(() => {
+			assignStatus.value = { ...assignStatus.value, [gym._id]: null };
+		}, 2000);
+	};
+	const openAssignModal = (gym) => {
+		assignModalGym.value = gym;
+		let ownerId = gym.ownerId;
+		if (!ownerId || !owners.value.some((o) => o._id === ownerId)) ownerId = "";
+		assignModalForm.value = {
+			ownerId,
+			exerciseTypeId: gym.exerciseTypeId || "",
+			difficulty: gym.difficulty || "",
+		};
+		showAssignModal.value = true;
+	};
+
+	const saveAssignModal = async () => {
+		if (!assignModalGym.value) return;
+		const payload = {};
+		if (
+			assignModalForm.value.ownerId &&
+			owners.value.find((o) => o._id === assignModalForm.value.ownerId)
+		) {
+			payload.ownerId = assignModalForm.value.ownerId;
+		}
+		if (assignModalForm.value.exerciseTypeId) {
+			payload.exerciseTypeId = assignModalForm.value.exerciseTypeId;
+		}
+		if (assignModalForm.value.difficulty) {
+			payload.difficulty = assignModalForm.value.difficulty;
+		}
+		const unset = {};
+		if (!assignModalForm.value.ownerId) unset.ownerId = "";
+		if (!assignModalForm.value.exerciseTypeId) unset.exerciseTypeId = "";
+		if (!assignModalForm.value.difficulty) unset.difficulty = "";
+		const finalPayload = Object.keys(unset).length
+			? { ...payload, $unset: unset }
+			: payload;
+		try {
+			const res = await fetch(
+				window.config.BACKEND_URL +
+					`/api/gyms/${assignModalGym.value._id}/assign`,
+				{
+					method: "PATCH",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(finalPayload),
+				}
+			);
+			if (res.ok) {
+				assignStatus.value = {
+					...assignStatus.value,
+					[assignModalGym.value._id]: "success",
+				};
+				showAssignModal.value = false;
+				assignModalGym.value = null;
+				assignModalForm.value = {
+					ownerId: "",
+					exerciseTypeId: "",
+					difficulty: "",
+				};
+				await fetchGyms();
+			} else {
+				assignStatus.value = {
+					...assignStatus.value,
+					[assignModalGym.value._id]: "error",
+				};
 			}
-		);
-		if (res.ok) {
-			assignStatus.value = {
-				...assignStatus.value,
-				[assignModalGym.value._id]: "success",
-			};
-			showAssignModal.value = false;
-			assignModalGym.value = null;
-			assignModalForm.value = {
-				ownerId: "",
-				exerciseTypeId: "",
-				difficulty: "",
-			};
-			await fetchGyms();
-		} else {
+		} catch (e) {
 			assignStatus.value = {
 				...assignStatus.value,
 				[assignModalGym.value._id]: "error",
 			};
 		}
-	} catch (e) {
-		assignStatus.value = {
-			...assignStatus.value,
-			[assignModalGym.value._id]: "error",
-		};
-	}
-	setTimeout(() => {
-		if (assignModalGym.value && assignModalGym.value._id) {
-			assignStatus.value = {
-				...assignStatus.value,
-				[assignModalGym.value._id]: null,
-			};
-		}
-	}, 2000);
-};
+		setTimeout(() => {
+			if (assignModalGym.value && assignModalGym.value._id) {
+				assignStatus.value = {
+					...assignStatus.value,
+					[assignModalGym.value._id]: null,
+				};
+			}
+		}, 2000);
+	};
 
-const closeAssignModal = () => {
-	showAssignModal.value = false;
-};
+	const closeAssignModal = () => {
+		showAssignModal.value = false;
+	};
 
-
-onMounted(() => {
-	fetchGyms();
-	fetchOwners();
-	fetchExerciseTypes();
-	setTimeout(() => {
-		gyms.value.forEach((gym) => {
-			gym._assignExerciseTypeId = gym.exerciseTypeId || "";
-			gym._assignDifficulty = gym.difficulty || "";
-		});
-	}, 500);
-});
+	onMounted(() => {
+		fetchGyms();
+		fetchOwners();
+		fetchExerciseTypes();
+		setTimeout(() => {
+			gyms.value.forEach((gym) => {
+				gym._assignExerciseTypeId = gym.exerciseTypeId || "";
+				gym._assignDifficulty = gym.difficulty || "";
+			});
+		}, 500);
+	});
 </script>
 
 <template>
@@ -383,7 +371,6 @@ onMounted(() => {
 		class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8"
 	>
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<!-- Header -->
 			<div class="text-center mb-8">
 				<h1 class="text-4xl font-bold text-gray-900 mb-2">
 					Gestion des Salles
@@ -393,7 +380,6 @@ onMounted(() => {
 				</p>
 			</div>
 
-			<!-- Formulaire Salle -->
 			<div
 				class="bg-white shadow-2xl rounded-3xl mb-12 overflow-hidden border border-gray-200"
 			>
@@ -688,7 +674,6 @@ onMounted(() => {
 					</form>
 				</div>
 			</div>
-			<!-- Tableau des Salles -->
 			<div
 				class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 mb-12"
 			>
@@ -710,7 +695,6 @@ onMounted(() => {
 						Salles enregistrées ({{ gyms.length }})
 					</h3>
 				</div>
-				<!-- Message si aucune salle -->
 				<div v-if="gyms.length === 0" class="text-center text-gray-500 py-12">
 					<div
 						class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center"
@@ -737,7 +721,6 @@ onMounted(() => {
 					</p>
 				</div>
 
-				<!-- Grille de cartes responsive pour toutes les tailles d'écran -->
 				<div v-else class="p-6">
 					<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 						<div
@@ -745,7 +728,6 @@ onMounted(() => {
 							:key="gym._id"
 							class="group bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
 						>
-							<!-- Header de la carte -->
 							<div
 								class="relative bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white"
 							>
@@ -805,9 +787,7 @@ onMounted(() => {
 								</div>
 							</div>
 
-							<!-- Corps de la carte -->
 							<div class="p-6 space-y-4">
-								<!-- Informations principales -->
 								<div class="grid grid-cols-2 gap-4">
 									<div class="flex items-center space-x-2">
 										<div
@@ -866,7 +846,6 @@ onMounted(() => {
 									</div>
 								</div>
 
-								<!-- Équipements -->
 								<div>
 									<p class="text-xs text-gray-500 mb-2 font-medium">
 										Équipements
@@ -895,7 +874,6 @@ onMounted(() => {
 									</div>
 								</div>
 
-								<!-- Activités -->
 								<div>
 									<p class="text-xs text-gray-500 mb-2 font-medium">
 										Activités
@@ -924,7 +902,6 @@ onMounted(() => {
 									</div>
 								</div>
 
-								<!-- Type d'exercice et difficulté -->
 								<div
 									class="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100"
 								>
@@ -935,7 +912,8 @@ onMounted(() => {
 												gym.exerciseTypeId &&
 												exerciseTypes.find((t) => t._id === gym.exerciseTypeId)
 													? exerciseTypes.find(
-															(t) => t._id === gym.exerciseTypeId).name
+															(t) => t._id === gym.exerciseTypeId
+													  ).name
 													: "Aucun"
 											}}
 										</p>
@@ -971,7 +949,6 @@ onMounted(() => {
 								</div>
 							</div>
 
-							<!-- Actions -->
 							<div class="px-6 pb-6 flex flex-wrap gap-2">
 								<button
 									v-if="!gym.isApproved"
@@ -1037,7 +1014,6 @@ onMounted(() => {
 								</button>
 							</div>
 
-							<!-- Status indicator pour les actions -->
 							<div v-if="assignStatus[gym._id]" class="px-6 pb-4">
 								<div
 									v-if="assignStatus[gym._id] === 'success'"
@@ -1074,8 +1050,6 @@ onMounted(() => {
 					</div>
 				</div>
 			</div>
-
-			<!-- Section Types d'exercices -->
 			<div
 				class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200"
 			>
@@ -1108,7 +1082,6 @@ onMounted(() => {
 					</button>
 				</div>
 
-				<!-- Formulaire Types d'exercices -->
 				<div
 					v-if="showTypeForm"
 					class="p-8 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white"
@@ -1190,7 +1163,9 @@ onMounted(() => {
 									fill="currentColor"
 									viewBox="0 0 24 24"
 								>
-									<path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
+									<path
+										d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"
+									/>
 								</svg>
 								{{ typeForm._id ? "Modifier le type" : "Ajouter le type" }}
 							</button>
@@ -1198,7 +1173,6 @@ onMounted(() => {
 					</form>
 				</div>
 
-				<!-- Version mobile : cartes -->
 				<div class="block md:hidden p-4 space-y-6">
 					<div
 						v-for="type in exerciseTypes"
@@ -1254,7 +1228,6 @@ onMounted(() => {
 					</div>
 				</div>
 
-				<!-- Message si aucun type d'exercice -->
 				<div
 					v-if="exerciseTypes.length === 0"
 					class="text-center text-gray-500 py-12"
@@ -1278,7 +1251,6 @@ onMounted(() => {
 					</p>
 				</div>
 
-				<!-- Grille de cartes pour les types d'exercices -->
 				<div v-else class="p-6">
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 						<div
@@ -1286,14 +1258,12 @@ onMounted(() => {
 							:key="type._id"
 							class="group bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
 						>
-							<!-- Header de la carte type d'exercice -->
 							<div
 								class="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white"
 							>
 								<h4 class="text-lg font-bold truncate">{{ type.name }}</h4>
 							</div>
 
-							<!-- Corps de la carte -->
 							<div class="p-4">
 								<p v-if="type.description" class="text-gray-600 text-sm mb-3">
 									{{ type.description }}
@@ -1302,7 +1272,6 @@ onMounted(() => {
 									Aucune description
 								</p>
 
-								<!-- Muscles ciblés -->
 								<div
 									v-if="type.targetedMuscles && type.targetedMuscles.length > 0"
 									class="mb-4"
@@ -1321,7 +1290,6 @@ onMounted(() => {
 									</div>
 								</div>
 
-								<!-- Actions -->
 								<div class="flex gap-2">
 									<button
 										@click="editType(type)"
@@ -1362,7 +1330,6 @@ onMounted(() => {
 		</div>
 	</div>
 
-	<!-- Modal d'attribution -->
 	<div
 		v-if="showAssignModal"
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
@@ -1437,7 +1404,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-	/* Animations fluides */
 	.animate-fade-in {
 		animation: fadeInUp 0.6s ease-out;
 	}
@@ -1453,12 +1419,10 @@ onMounted(() => {
 		}
 	}
 
-	/* Animation pour les cartes */
 	.group:hover {
 		transform: translateY(-4px);
 	}
 
-	/* Transition fluide pour tous les éléments interactifs */
 	button,
 	.group,
 	input,
@@ -1467,7 +1431,6 @@ onMounted(() => {
 		transition: all 0.3s ease;
 	}
 
-	/* Amélioration des focus states */
 	input:focus,
 	textarea:focus,
 	select:focus {
@@ -1475,7 +1438,6 @@ onMounted(() => {
 		transform: translateY(-1px);
 	}
 
-	/* Animation des boutons */
 	button:hover {
 		transform: translateY(-2px);
 		box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
@@ -1485,7 +1447,6 @@ onMounted(() => {
 		transform: translateY(0);
 	}
 
-	/* Animation des modales */
 	.modal-enter-active {
 		transition: all 0.3s ease;
 	}
@@ -1501,7 +1462,6 @@ onMounted(() => {
 		transform: scale(1.1);
 	}
 
-	/* Responsive improvements */
 	@media (max-width: 768px) {
 		.grid {
 			grid-template-columns: 1fr;
@@ -1521,7 +1481,6 @@ onMounted(() => {
 		}
 	}
 
-	/* Améliorations des badges de statut */
 	.status-badge {
 		animation: pulse 2s infinite;
 	}
@@ -1536,7 +1495,6 @@ onMounted(() => {
 		}
 	}
 
-	/* Amélioration des cards avec des ombres graduelles */
 	.shadow-card {
 		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 		transition: box-shadow 0.3s ease;
@@ -1547,14 +1505,12 @@ onMounted(() => {
 			0 10px 10px -5px rgba(0, 0, 0, 0.04);
 	}
 
-	/* Gradient borders pour les cartes importantes */
 	.gradient-border {
 		background: linear-gradient(white, white) padding-box,
 			linear-gradient(45deg, #667eea, #764ba2) border-box;
 		border: 2px solid transparent;
 	}
 
-	/* Effet de loading amélioré */
 	.loading-spinner {
 		animation: spin 1s linear infinite;
 	}
@@ -1568,7 +1524,6 @@ onMounted(() => {
 		}
 	}
 
-	/* Améliorations pour les messages d'erreur/succès */
 	.notification {
 		animation: slideInFromTop 0.4s ease-out;
 	}
@@ -1584,13 +1539,11 @@ onMounted(() => {
 		}
 	}
 
-	/* Overflow protection pour éviter le scroll horizontal */
 	.container {
 		max-width: 100%;
 		overflow-x: hidden;
 	}
 
-	/* Tables responsives - fallback pour très petits écrans */
 	@media (max-width: 640px) {
 		.table-container {
 			overflow-x: auto;
