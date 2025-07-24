@@ -1,9 +1,8 @@
 <script setup>
 	import { ref, computed, onMounted } from "vue";
-
-	// variable
+	
 	const loading = ref(true);
-	const gyms = ref([]); 
+	const gyms = ref([]);
 	const success = ref(false);
 	const successMessage = ref("");
 	const error = ref("");
@@ -20,22 +19,21 @@
 		description: "",
 	});
 
-	// Vérifie si l'owner a au moins une salle en attente de validation
+	// si l'owner a au moins une salle en attente de validation
 	const hasPendingGym = computed(() => {
 		return gyms.value.some((gym) => !gym.isApproved);
 	});
 
-	// Vérifie si l'owner a atteint la limite de 4 salles
+	// si l'owner a atteint la limite de 4 salles
 	const hasReachedGymLimit = computed(() => {
 		return gyms.value.length >= 4;
 	});
 
-	// Vérifie si on peut créer une nouvelle salle (pas de salle en attente ET limite non atteinte)
+	// si on peut créer une nouvelle salle (pas de salle en attente ET limite non atteinte)
 	const canCreateNewGym = computed(() => {
 		return !hasPendingGym.value && !hasReachedGymLimit.value;
 	});
 
-	// methodes
 	const loadGyms = async () => {
 		loading.value = true;
 		try {
@@ -142,7 +140,8 @@
 			};
 
 			const res = await fetch(
-				window.config.BACKEND_URL + `/api/gyms/owner/${gym._id}?owner_id=${user.id}`,
+				window.config.BACKEND_URL +
+					`/api/gyms/owner/${gym._id}?owner_id=${user.id}`,
 				{
 					method: "PUT",
 					headers: { "Content-Type": "application/json" },
@@ -153,22 +152,18 @@
 			if (!res.ok) throw new Error("Erreur lors de la sauvegarde");
 
 			const updatedGym = await res.json();
-			// Mettre à jour la salle dans le tableau
 			const index = gyms.value.findIndex((g) => g._id === gym._id);
 			if (index !== -1) {
 				gyms.value[index] = updatedGym;
 			}
 
-			// Sortir du mode édition
 			editMode.value[gym._id] = false;
 
 			success.value = true;
 			successMessage.value = `Salle "${updatedGym.name}" mise à jour avec succès.`;
 
-			// Réinitialiser les formulaires d'édition
 			initEditForms();
 
-			// Masquer le message après 3 secondes
 			setTimeout(() => {
 				success.value = false;
 			}, 3000);
@@ -227,10 +222,8 @@
 
 			const newGym = await res.json();
 
-			// Ajouter la nouvelle salle au tableau
 			gyms.value.push(newGym);
 
-			// Réinitialiser le formulaire de création
 			createForm.value = {
 				name: "",
 				capacity: "",
@@ -241,16 +234,13 @@
 				description: "",
 			};
 
-			// Masquer le formulaire de création
 			showCreateForm.value = false;
 
 			success.value = true;
 			successMessage.value = `Salle "${newGym.name}" créée avec succès. Elle est en attente de validation.`;
 
-			// Réinitialiser les formulaires d'édition
 			initEditForms();
 
-			// Masquer le message après 3 secondes
 			setTimeout(() => {
 				success.value = false;
 			}, 3000);
@@ -260,19 +250,17 @@
 	};
 
 	const deleteGym = async (gym) => {
-		// Empêcher la suppression si une salle est en attente
 		if (hasPendingGym.value) {
 			error.value =
 				"Vous ne pouvez pas supprimer vos salles tant qu'une salle est en attente de validation.";
 			return;
 		}
 
-		// Demander confirmation avec un message détaillé
 		const confirmMessage = `⚠️ SUPPRESSION DÉFINITIVE ⚠️\n\nÊtes-vous absolument sûr(e) de vouloir supprimer la salle "${gym.name}" ?\n\n❌ Cette action est IRRÉVERSIBLE\n❌ Toutes les données liées à cette salle seront perdues\n❌ Les défis associés à cette salle seront supprimés\n\nTapez "SUPPRIMER" pour confirmer ou annulez cette action.`;
 
 		const userInput = prompt(confirmMessage);
 		if (userInput !== "SUPPRIMER") {
-			return; // Annulation
+			return;
 		}
 
 		success.value = false;
@@ -283,9 +271,10 @@
 			if (!user || !user.id) throw new Error("Utilisateur non trouvé");
 
 			const res = await fetch(
-				window.config.BACKEND_URL + `/api/gyms/owner/${gym._id}?owner_id=${user.id}`,
+				window.config.BACKEND_URL +
+					`/api/gyms/owner/${gym._id}?owner_id=${user.id}`,
 				{
-					method: "DELETE"
+					method: "DELETE",
 				}
 			);
 
@@ -296,17 +285,14 @@
 
 			const result = await res.json();
 
-			// Supprimer la salle du tableau local
 			gyms.value = gyms.value.filter((g) => g._id !== gym._id);
 
-			// Réinitialiser les formulaires d'édition
 			initEditForms();
 
 			success.value = true;
 			successMessage.value =
 				result.message || `Salle "${gym.name}" supprimée avec succès.`;
 
-			// Masquer le message après 4 secondes
 			setTimeout(() => {
 				success.value = false;
 			}, 4000);
@@ -325,7 +311,6 @@
 		class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8"
 	>
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<!-- Header -->
 			<div class="text-center mb-8">
 				<h1 class="text-4xl font-bold text-gray-900 mb-2">
 					{{ gyms.length === 0 ? "Ma Salle de Sport" : "Mes Salles de Sport" }}
@@ -339,7 +324,6 @@
 				</p>
 			</div>
 
-			<!-- Loading State -->
 			<transition name="fade" mode="out-in">
 				<div v-if="loading" key="loading" class="text-center py-20">
 					<div
@@ -367,9 +351,7 @@
 					</p>
 				</div>
 
-				<!-- Content -->
 				<div v-else key="content">
-					<!-- Messages de statut globaux -->
 					<transition name="slide-down">
 						<div v-if="success" class="mb-6">
 							<div
@@ -424,7 +406,6 @@
 						</div>
 					</transition>
 
-					<!-- Message d'information si une salle est en attente -->
 					<transition name="slide-down">
 						<div v-if="hasPendingGym" class="mb-6">
 							<div
@@ -462,7 +443,6 @@
 						</div>
 					</transition>
 
-					<!-- Message d'information si la limite de salles est atteinte -->
 					<transition name="slide-down">
 						<div v-if="hasReachedGymLimit && !hasPendingGym" class="mb-6">
 							<div
@@ -498,7 +478,6 @@
 							</div>
 						</div>
 					</transition>
-					<!-- Bouton d'ajout d'une nouvelle salle (affiché si on a déjà des salles) -->
 					<div v-if="gyms.length > 0" class="mb-8 text-center">
 						<button
 							@click="canCreateNewGym && (showCreateForm = !showCreateForm)"
@@ -521,9 +500,7 @@
 					</div>
 
 					<transition name="fade" mode="out-in">
-						<!-- Contenu principal avec un seul élément racine -->
 						<div key="main-content">
-							<!-- Aucune salle OU formulaire de création (seulement si on peut créer) -->
 							<div
 								v-if="gyms.length === 0 || (showCreateForm && canCreateNewGym)"
 								class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 mb-8"
@@ -562,7 +539,6 @@
 
 								<div class="p-8">
 									<form @submit.prevent="onCreate" class="space-y-6">
-										<!-- Formulaire de création identique à l'original -->
 										<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 											<div>
 												<label
@@ -766,7 +742,6 @@
 								</div>
 							</div>
 
-							<!-- Liste des salles existantes -->
 							<div
 								v-if="gyms.length > 0 && !showCreateForm"
 								key="gyms-list"
@@ -782,7 +757,6 @@
 										:key="gym._id"
 										class="bg-white shadow-lg rounded-3xl overflow-hidden border border-gray-200 transform transition-all duration-300 hover:shadow-xl card-hover"
 									>
-										<!-- Header de la carte -->
 										<div
 											:class="[
 												'px-6 py-4',
@@ -869,10 +843,8 @@
 											</div>
 										</div>
 
-										<!-- Contenu de la carte -->
 										<div class="p-6">
 											<div v-if="!editMode[gym._id]">
-												<!-- Mode lecture -->
 												<div class="space-y-4">
 													<div class="grid grid-cols-2 gap-4 text-sm">
 														<div class="flex items-center gap-2">
@@ -972,7 +944,6 @@
 											</div>
 
 											<div v-else>
-												<!-- Mode édition -->
 												<form
 													@submit.prevent="updateGym(gym)"
 													class="space-y-4"
@@ -1112,7 +1083,6 @@
 </template>
 
 <style scoped>
-	/* Animations fluides */
 	.fade-enter-active,
 	.fade-leave-active {
 		transition: all 0.5s ease;
@@ -1138,7 +1108,6 @@
 		transform: translateY(-5px);
 	}
 
-	/* Animation d'entrée pour les cartes */
 	.animate-fade-in {
 		animation: fadeInUp 0.6s ease-out;
 	}
@@ -1154,7 +1123,6 @@
 		}
 	}
 
-	/* Animation pour les icônes de chargement */
 	.animate-spin {
 		animation: spin 2s linear infinite;
 	}
@@ -1168,7 +1136,6 @@
 		}
 	}
 
-	/* Animations pour la liste des cartes */
 	.card-list-enter-active {
 		transition: all 0.6s ease;
 	}
@@ -1187,7 +1154,6 @@
 		transition: transform 0.3s ease;
 	}
 
-	/* Améliorations des inputs */
 	input:focus,
 	textarea:focus,
 	select:focus {
@@ -1195,7 +1161,6 @@
 		border-color: rgb(59, 130, 246);
 	}
 
-	/* Amélioration des boutons */
 	button:hover {
 		transform: translateY(-1px);
 	}
@@ -1204,7 +1169,6 @@
 		transform: translateY(0);
 	}
 
-	/* Animation des notifications */
 	.notification-enter-active {
 		transition: all 0.3s ease;
 	}
@@ -1220,7 +1184,6 @@
 		transform: translateX(-100%);
 	}
 
-	/* Responsive amélioré */
 	@media (max-width: 768px) {
 		.container {
 			padding-left: 1rem;
@@ -1236,14 +1199,12 @@
 		}
 	}
 
-	/* Effet de survol pour les cartes */
 	.card-hover:hover {
 		transform: translateY(-4px);
 		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
 			0 10px 10px -5px rgba(0, 0, 0, 0.04);
 	}
 
-	/* Dégradés personnalisés */
 	.gradient-blue {
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 	}
@@ -1256,7 +1217,6 @@
 		background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 	}
 
-	/* Animation de pulsation pour les badges */
 	.animate-pulse {
 		animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 	}
@@ -1271,7 +1231,6 @@
 		}
 	}
 
-	/* Styles pour les tags */
 	.tag {
 		transition: all 0.2s ease;
 	}
@@ -1280,19 +1239,16 @@
 		transform: scale(1.05);
 	}
 
-	/* Améliorations pour les formulaires en mode compact */
 	.compact-form input,
 	.compact-form textarea {
 		padding: 8px 12px;
 		font-size: 14px;
 	}
 
-	/* Transition fluide pour les modes d'édition */
 	.edit-transition {
 		transition: all 0.3s ease;
 	}
 
-	/* Styles pour les boutons d'action des cartes */
 	.card-action-btn {
 		transition: all 0.2s ease;
 		backdrop-filter: blur(10px);

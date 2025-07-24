@@ -1,13 +1,10 @@
 <template>
-  <router-view />
+	<router-view />
 </template>
 
-<script setup>
-
-</script>
+<script setup></script>
 
 <style scoped>
-	/* style ici */
 	div {
 		font-size: 2rem;
 		text-align: center;

@@ -1,7 +1,6 @@
 <script setup>
 	import { ref, onMounted } from "vue";
 
-	// State réactif
 	const badges = ref([]);
 	const success = ref(false);
 	const successMessage = ref("");
@@ -18,7 +17,6 @@
 		},
 	});
 
-	// Méthodes
 	const fetchBadges = async () => {
 		try {
 			const res = await fetch(window.config.BACKEND_URL + "/api/badges");
@@ -57,10 +55,8 @@
 			resetForm();
 			await fetchBadges();
 
-			// Scroll vers le haut
 			window.scrollTo({ top: 0, behavior: "smooth" });
 
-			// Masquer le message après 3 secondes
 			setTimeout(() => {
 				success.value = false;
 			}, 3000);
@@ -82,7 +78,6 @@
 			},
 		};
 
-		// Scroll vers le formulaire
 		window.scrollTo({ top: 0, behavior: "smooth" });
 	};
 
@@ -155,7 +150,6 @@
 		return descriptions[type] || "accomplissements";
 	};
 
-	
 	onMounted(async () => {
 		await fetchBadges();
 	});
@@ -166,7 +160,6 @@
 		class="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50 py-8"
 	>
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<!-- Header -->
 			<div class="text-center mb-8">
 				<h1 class="text-4xl font-bold text-gray-900 mb-2">
 					🏆 Gestion des Badges et Récompenses
@@ -176,7 +169,6 @@
 				</p>
 			</div>
 
-			<!-- Messages de feedback -->
 			<transition name="slide-down">
 				<div v-if="success" class="mb-6">
 					<div
@@ -227,7 +219,6 @@
 				</div>
 			</transition>
 
-			<!-- Formulaire de création/modification de badge -->
 			<div
 				class="bg-white shadow-2xl rounded-3xl mb-12 overflow-hidden border border-gray-200"
 			>
@@ -359,7 +350,6 @@
 									v-model="form.image"
 									type="url"
 									class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
-									placeholder="https://exemple.com/badge.png"
 								/>
 							</div>
 						</div>
@@ -413,7 +403,6 @@
 				</div>
 			</div>
 
-			<!-- Liste des badges -->
 			<div
 				class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200"
 			>
@@ -560,7 +549,6 @@
 </template>
 
 <style scoped>
-	/* Animations */
 	.slide-down-enter-active {
 		transition: all 0.3s ease-out;
 	}
@@ -576,7 +564,6 @@
 		opacity: 0;
 	}
 
-	/* Hover effects */
 	.group:hover {
 		transform: translateY(-2px);
 	}

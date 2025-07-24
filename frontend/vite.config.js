@@ -34,7 +34,5 @@ export default defineConfig({
     define: {
     'window.config.FRONTEND_URL': JSON.stringify('http://localhost:3000'),
     'window.config.BACKEND_URL': JSON.stringify('http://localhost:3005'),
-    // 'window.config.FRONTEND_URL': JSON.stringify('http://tsness.com'),
-    // 'window.config.BACKEND_URL': JSON.stringify('http://backend.tsness.com'),
   }
 })
